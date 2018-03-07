@@ -1,0 +1,29 @@
+{
+    "name": "this7/view",
+    "description": "this7 PHP view class.",
+    "license": "MIT",
+    "homepage": "https://github.com/this7/view",
+    "keywords": [
+        "this7",
+        "php-view"
+    ],
+    "authors": [
+    {
+        "name": "Yan Tianzeng",
+        "email": "qinuoyun@qq.com",
+        "homepage": "http://www.ub-u7.com/"
+    }],
+    "require":
+    {
+        "php": ">=5.6.6",
+        "this7/config": "dev-master",
+        "this7/cache": "dev-master",
+    },
+    "autoload":
+    {
+        "psr-4":
+        {
+            "this7\\view\\": "src"
+        }
+    }
+}

@@ -1,0 +1,12 @@
+{
+    "defer":
+    {
+        "name": "延时加载",
+        "value": false
+    },
+    "library":
+    {
+        "name": "标签库",
+        "value": "uikit"
+    }
+}
