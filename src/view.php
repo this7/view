@@ -20,6 +20,12 @@ class view {
     public $url;
 
     /**
+     * 组件数组
+     * @var [type]
+     */
+    public $component = array();
+
+    /**
      * 页面模版展示
      * @param  string $value [description]
      * @return [type]        [description]
@@ -32,47 +38,105 @@ class view {
             $this->url = $_GET['app'] . "/" . $_GET['model'] . "/" . $_GET['action'];
         }
         #获取配置信息
-        $app    = get_json(ROOT_DIR . DS . 'client/app.json');
-        $config = get_json(ROOT_DIR . DS . $this->url . '.json');
-        #设置title(标题)
-        $title = isset($app['window']['navigationBarTitleText']) ? $app['window']['navigationBarTitleText'] : '这是This7框架APP应用';
-        $title = isset($config['navigationBarTitleText']) ? $config['navigationBarTitleText'] : $title;
+        $app = get_json(ROOT_DIR . DS . 'client/app.json');
         #获取HTML内容
-        $body = file_get_contents(ROOT_DIR . DS . $this->url . '.html');
-        #获取script内容
-        $script = file_get_contents(ROOT_DIR . DS . $this->url . '.js');
+        $body     = file_get_contents(ROOT_DIR . DS . $this->url . '.html');
+        $template = $style = $script = $json = null;
+        if (preg_match('#<template(.*?)>(.*?)<\/template>#is', $body, $matchs)) {
+            $template = $matchs[2];
+        }
+        if (preg_match('#<style(.*?)>(.*?)<\/style>#is', $body, $matchs)) {
+            $style = $matchs[2];
+        }
+        if (preg_match('#<json(.*?)>(.*?)<\/json>#is', $body, $matchs)) {
+            $json       = $matchs[2];
+            $config     = to_array($json);
+            $compontent = null;
+            if (isset($config['components'])) {
+                foreach ($config['components'] as $key => $value) {
+                    $compontent .= '"' . $key . '":' . $key . ",";
+                    $this->components($key, $value);
+                }
+            }
+        }
+        if (preg_match('#<script(.*?)>(.*?)<\/script>#is', $body, $matchs)) {
+            $script = $matchs[2];
+            $string = "var app=new Vue({el: '#app',";
+            if (!empty($compontent)) {
+                $string .= 'components:{' . trim($compontent, ",") . '},';
+            }
+            $script = preg_replace("/\{/", $string, $script, 1);
+            $script = $script . ");";
+        }
+        #设置组件
+        $component = '';
+        foreach ($this->component as $key => $value) {
+            $component .= $value . ";";
+        }
+
+        $script = $component . $script;
+        #设置title(标题)
+        $title = '这是This7框架APP应用';
         #获取解析结果
         ob_start();
-        echo $this->setHtmlCode($title, $body, $script);
+        echo $this->setHtmlCode($title, $template, $script, $style);
         $content = ob_get_clean();
         echo $content;
         exit;
     }
 
     /**
+     * 获取页面组件包
+     * @param  string $value [description]
+     * @return [type]        [description]
+     */
+    public function components($key, $value = '') {
+        $body     = file_get_contents(ROOT_DIR . DS . 'client' . DS . $value . '.html');
+        $template = $style = $script = $json = null;
+        if (preg_match('#<template(.*?)>(.*?)<\/template>#is', $body, $matchs)) {
+            $template = $matchs[2];
+        }
+        if (preg_match('#<style(.*?)>(.*?)<\/style>#is', $body, $matchs)) {
+            $style = $matchs[2];
+        }
+        if (preg_match('#<json(.*?)>(.*?)<\/json>#is', $body, $matchs)) {
+            $json       = $matchs[2];
+            $config     = to_array($json);
+            $compontent = null;
+            if (isset($config['components'])) {
+                foreach ($config['components'] as $key => $value) {
+                    $compontent .= '"' . $key . '":' . $key . ",";
+                    $this->components($key, $value);
+                }
+            }
+
+        }
+        if (preg_match('#<script(.*?)>(.*?)<\/script>#is', $body, $matchs)) {
+            $script = $matchs[2];
+            $string = "{";
+            if (!empty($compontent)) {
+                $string .= 'components:{' . trim($compontent, ",") . '},';
+            }
+            $script = preg_replace("/\{/", $string, $script, 1);
+        }
+        $t = str_replace(array("\r\n", "\r", "\n"), " ", $template);
+
+        $data              = 'var ' . $key . '=' . substr(trim($script), 0, -1) . ",template:'" . str_replace("'", "\'", $t) . "'}";
+        $this->component[] = $data;
+    }
+
+    /**
      * 设置HTML代码
      * @param string $value [description]
      */
-    public function setHtmlCode($title = 'THIS7', $body = '', $script = '') {
+    public function setHtmlCode($title = 'THIS7', $body = '', $script = '', $style = '') {
         $js = array(
             ROOT . '/client/config.js',
-            get_relative_path(__DIR__) . '/build/Configs.js',
-            get_relative_path(__DIR__) . '/build/Functions.js',
-            get_relative_path(__DIR__) . '/build/Util.js',
-            get_relative_path(__DIR__) . '/build/Batcher.js',
-            get_relative_path(__DIR__) . '/build/Observer.js',
-            get_relative_path(__DIR__) . '/build/Watcher.js',
-            get_relative_path(__DIR__) . '/build/Directive.js',
-            get_relative_path(__DIR__) . '/build/Binding.js',
-            get_relative_path(__DIR__) . '/build/View.js',
-            get_relative_path(__DIR__) . '/build/Component.js',
-            get_relative_path(__DIR__) . '/build/Page.js',
-
+            'https://cdn.jsdelivr.net/npm/vue/dist/vue.js',
             ROOT . '/client/app.js',
         );
         $css = array(
             ROOT . '/client/app.css',
-            ROOT . '/' . $this->url . '.css',
         );
         $html = '<!doctype html><html lang="zh"><head><meta charset="UTF-8"><title>';
         $html .= $title;
@@ -80,6 +144,7 @@ class view {
         foreach ($css as $key => $value) {
             $html .= '<link rel="stylesheet" type="text/css" href="' . $value . '?' . time() . '">';
         }
+        $html .= '<style type="text/css">' . $style . '</style>';
         $html .= '</head><body><div id="app">';
         $html .= $body;
         $html .= '</div>';
@@ -91,97 +156,4 @@ class view {
         $html .= '</script></body></html>';
         return $html;
     }
-
-    /**
-     * 页面直接跳转
-     * @param  string  $url  跳转地址
-     * @param  integer $time 停留时间
-     * @param  string  $msg  提示信息
-     * @return [type]        [description]
-     */
-    public function go($url, $time = 0, $msg = '') {
-        if (is_array($url)) {
-            switch (count($url)) {
-            case 2:
-                $url = $this->getUrl($url[0], $url[1]);
-                break;
-            default:
-                $url = $this->getUrl($url[0]);
-                break;
-            }
-        } else {
-            $url = $this->getUrl($url);
-        }
-        if (!headers_sent()) {
-            $time == 0 ? header("Location:" . $url) : header("refresh:{$time};url={$url}");
-            exit($msg);
-        } else {
-            echo "<meta http-equiv='Refresh' content='{$time};URL={$url}'>";
-            if ($msg) {
-                echo ($msg);
-            }
-            exit;
-        }
-    }
-
-    /**
-     * URL地址获取
-     * @param  sting $address   需要解析的地址用/分割
-     * @param  sting $parameter 需要解析的参数
-     * @return url              返回路径
-     */
-    public function getUrl($address = NULL, $parameter = NULL) {
-        if (strstr($address, "http://") || strstr($address, "https://") || strstr($address, "//")) {
-            return $address;
-        }
-        $array = explode("/", $address);
-        $count = count($array);
-        $par   = array();
-        $url   = null;
-        switch ($count) {
-        case '3':
-            $root     = rtrim(ROOT, "/") . '/' . $array[0];
-            $par['c'] = $array[1];
-            $par['a'] = $array[2];
-            break;
-        case '2':
-            $root     = rtrim(ROOT, "/");
-            $par['c'] = $array[0];
-            $par['a'] = $array[1];
-            break;
-        default:
-        case '1':
-            $root     = rtrim(ROOT, "/");
-            $par['c'] = $_GET['model'];
-            $par['a'] = $array[0];
-            break;
-        }
-        #转换参数信息
-        if (!empty($parameter)) {
-            if (strstr($parameter, "=")) {
-                $array = explode(';', $parameter);
-                foreach ($array as $key => $value) {
-                    $value          = explode('=', $value);
-                    $par[$value[0]] = $value[1];
-                }
-            } elseif (strstr($parameter, "/")) {
-                $array = explode('/', $parameter);
-                for ($i = 0; $i < count($array); $i += 2) {
-                    $par[$array[$i]] = $array[$i + 1];
-                }
-            } elseif (is_array($parameter)) {
-                $par = $parameter;
-            }
-        }
-        #进行参数拼接
-        foreach ($par as $key => $value) {
-            if ($key == 'c' || $key == 'a' || $key == 'w') {
-                $url .= "/{$value}";
-            } else {
-                $url .= "/{$key}/{$value}";
-            }
-        }
-        return $root . $url;
-    }
-
 }
