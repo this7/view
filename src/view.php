@@ -26,6 +26,25 @@ class view {
     public $component = array();
 
     /**
+     * [$style description]
+     * @var null
+     */
+    public $style = null;
+
+    /**
+     * 扩展信息
+     * @var [type]
+     */
+    protected $exp = [
+        '/\s+eq\s+/'  => '==',
+        '/\s+neq\s+/' => '!=',
+        '/\s+gt\s+/'  => '>',
+        '/\s+lt\s+/'  => '<',
+        '/\s+lte\s+/' => '<=',
+        '/\s+gte\s+/' => '>=',
+    ];
+
+    /**
      * 页面模版展示
      * @param  string $value [description]
      * @return [type]        [description]
@@ -41,23 +60,30 @@ class view {
         $app = get_json(ROOT_DIR . DS . 'client/app.json');
         #获取HTML内容
         $body     = file_get_contents(ROOT_DIR . DS . $this->url . '.html');
-        $template = $style = $script = $json = null;
+        $template = $style = $script = $json = $config = null;
         if (preg_match('#<template(.*?)>(.*?)<\/template>#is', $body, $matchs)) {
-            $template = $matchs[2];
-        }
-        if (preg_match('#<style(.*?)>(.*?)<\/style>#is', $body, $matchs)) {
-            $style = $matchs[2];
+            $attr = $this->getAttr($matchs[1]);
+            if (isset($attr['file'])) {
+                $template = $this->setTemplate($attr['file'], $matchs[2]);
+            } else {
+                $template = $matchs[2];
+            }
+
         }
         if (preg_match('#<json(.*?)>(.*?)<\/json>#is', $body, $matchs)) {
             $json       = $matchs[2];
             $config     = to_array($json);
             $compontent = null;
             if (isset($config['components'])) {
+                $this->style = '';
                 foreach ($config['components'] as $key => $value) {
                     $compontent .= '"' . $key . '":' . $key . ",";
                     $this->components($key, $value);
                 }
             }
+        }
+        if (preg_match('#<style(.*?)>(.*?)<\/style>#is', $body, $matchs)) {
+            $style = $this->style . $matchs[2];
         }
         if (preg_match('#<script(.*?)>(.*?)<\/script>#is', $body, $matchs)) {
             $script = $matchs[2];
@@ -76,7 +102,7 @@ class view {
 
         $script = $component . $script;
         #设置title(标题)
-        $title = '这是This7框架APP应用';
+        $title = isset($config['title']) ? $config['title'] : '这是This7框架APP应用';
         #获取解析结果
         ob_start();
         echo $this->setHtmlCode($title, $template, $script, $style);
@@ -97,7 +123,7 @@ class view {
             $template = $matchs[2];
         }
         if (preg_match('#<style(.*?)>(.*?)<\/style>#is', $body, $matchs)) {
-            $style = $matchs[2];
+            $this->style .= $matchs[2];
         }
         if (preg_match('#<json(.*?)>(.*?)<\/json>#is', $body, $matchs)) {
             $json       = $matchs[2];
@@ -133,11 +159,19 @@ class view {
         $js = array(
             ROOT . '/client/config.js',
             'https://cdn.jsdelivr.net/npm/vue/dist/vue.js',
-            ROOT . '/client/app.js',
         );
         $css = array(
             ROOT . '/client/app.css',
         );
+        $json = to_array(file_get_contents(ROOT_DIR . DS . 'client' . DS . 'app.json'));
+        #判断是否有加载其他外部JS
+        if (isset($json['script'])) {
+            $js = array_merge($js, $json['script']);
+        }
+        #判断是否有加载其他外部CSS
+        if (isset($json['style'])) {
+            $css = array_merge($css, $json['style']);
+        }
         $html = '<!doctype html><html lang="zh"><head><meta charset="UTF-8"><title>';
         $html .= $title;
         $html .= '</title>';
@@ -155,5 +189,38 @@ class view {
         $html .= $script;
         $html .= '</script></body></html>';
         return $html;
+    }
+
+    /**
+     * 设置模板
+     * @param string $file     模板文件
+     * @param string $template 继承内容
+     */
+    public function setTemplate($file = '', $template = '') {
+        $tpl_file = ROOT_DIR . DS . 'client/template/' . $file . '.html';
+        if (is_file($tpl_file)) {
+            $tpl_body = file_get_contents($tpl_file);
+            return preg_replace('#\<view\>\<\/view\>#is', $template, $tpl_body);
+        } else {
+            throw new Exception('Error return:模板文件不存在', -2);
+        }
+    }
+
+    /**
+     * 获取属性
+     *
+     * @param $con
+     *
+     * @return array
+     */
+    private function getAttr($con) {
+        $attr = [];
+        $preg = '#([\w\-\:]+)\s*=\s*([\'"])(.*?)\2#i';
+        if (preg_match_all($preg, $con, $matches)) {
+            foreach ($matches[1] as $i => $name) {
+                $attr[$name] = preg_replace(array_keys($this->exp), array_values($this->exp), $matches[3][$i]);
+            }
+        }
+        return $attr;
     }
 }
