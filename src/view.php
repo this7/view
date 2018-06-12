@@ -10,8 +10,9 @@
  * @link      http://www.ub-7.com
  */
 namespace this7\view;
+use this7\view\build\compile;
 
-class view {
+class view extends compile {
 
     /**
      * 编译文件
@@ -99,10 +100,13 @@ class view {
         foreach ($this->component as $key => $value) {
             $component .= $value . ";";
         }
-
         $script = $component . $script;
         #设置title(标题)
         $title = isset($config['title']) ? $config['title'] : '这是This7框架APP应用';
+        #解析HTML代码
+        #执行文件编译
+        $compile  = new Compile($this);
+        $template = $compile->run($template);
         #获取解析结果
         ob_start();
         echo $this->setHtmlCode($title, $template, $script, $style);
