@@ -160,21 +160,19 @@ class view extends compile {
      * @param string $value [description]
      */
     public function setHtmlCode($title = 'THIS7', $body = '', $script = '', $style = '') {
-        $js = array(
-            ROOT . '/client/config.js',
-            'https://cdn.jsdelivr.net/npm/vue/dist/vue.js',
-        );
-        $css = array(
-            ROOT . '/client/app.css',
-        );
         $json = to_array(file_get_contents(ROOT_DIR . DS . 'client' . DS . 'app.json'));
+        $js   = $css   = array();
         #判断是否有加载其他外部JS
         if (isset($json['script'])) {
-            $js = array_merge($js, $json['script']);
+            foreach ($json['script'] as $key => $value) {
+                $js[$key] = replace_url($value, 'file');
+            }
         }
         #判断是否有加载其他外部CSS
         if (isset($json['style'])) {
-            $css = array_merge($css, $json['style']);
+            foreach ($json['style'] as $key => $value) {
+                $css[$key] = replace_url($value, 'file');
+            }
         }
         $html = '<!doctype html><html lang="zh"><head><meta charset="UTF-8"><title>';
         $html .= $title;

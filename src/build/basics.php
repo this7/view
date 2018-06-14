@@ -169,36 +169,4 @@ abstract class basics {
         return $content;
     }
 
-    /**
-     * 替换URL地址
-     * @param  string $url  URL地址
-     * @param  string $type URL类型 link链接 file文件
-     * @param  string $path URL路径 app应用 root根目录
-     * @return mixed
-     */
-    protected function replaceUrl($url = '', $type = 'link') {
-
-        #判断链接是否为空
-        if (empty($url) && $type == 'link') {
-            return 'javascript:void(0)';
-        }
-        #判断链接是否为死链
-        if ($url == "javascript:void(0)") {
-            return 'javascript:void(0)';
-        }
-        #判断是否为远程地址
-        if (strstr($url, "//") || strstr($url, "http://") || strstr($url, "https://")) {
-            return $url;
-        }
-        #分类型执行
-        switch ($type) {
-        case 'link':
-            $url = ROOT . "/" . trim($url, "/");
-            break;
-        case 'file':
-            $url = ROOT . "/" . "client/" . trim($url, "/");
-        }
-        return $url;
-    }
-
 }
