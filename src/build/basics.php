@@ -144,7 +144,7 @@ abstract class basics {
      */
     private function getAttr($con) {
         $attr = [];
-        $preg = '#([\w\-]+)\s*=\s*([\'"])(.*?)\2#i';
+        $preg = '#([\:\w\-]+)\s*=\s*([\'"])(.*?)\2#i';
         if (preg_match_all($preg, $con, $matches)) {
             foreach ($matches[1] as $i => $name) {
                 $attr[$name] = preg_replace(array_keys($this->exp), array_values($this->exp), $matches[3][$i]);

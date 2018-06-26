@@ -28,7 +28,12 @@ class labels extends basics {
 
     //img标签地址转换
     public function _img($attr, $content, &$ubdata) {
-        $attr['src'] = replace_url($attr['src'], 'file');
-        return $this->recover('img', $attr, 'block');
+        if (isset($attr[':src'])) {
+            return $this->recover('img', $attr, 'block');
+        } else {
+            $attr['src'] = replace_url($attr['src'], 'file');
+            return $this->recover('img', $attr, 'block');
+        }
+
     }
 }
