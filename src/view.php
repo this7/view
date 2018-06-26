@@ -84,7 +84,7 @@ class view extends compile {
             }
         }
         if (preg_match('#<style(.*?)>(.*?)<\/style>#is', $body, $matchs)) {
-            $this->style .= $matchs[2];
+            $style = $this->style . $matchs[2];
         }
         if (preg_match('#<script(.*?)>(.*?)<\/script>#is', $body, $matchs)) {
             $script = $matchs[2];
@@ -109,7 +109,7 @@ class view extends compile {
         $template = $compile->run($template);
         #获取解析结果
         ob_start();
-        echo $this->setHtmlCode($title, $template, $script, $this->style);
+        echo $this->setHtmlCode($title, $template, $script, $style);
         $content = ob_get_clean();
         echo $content;
         exit;
@@ -174,7 +174,7 @@ class view extends compile {
                 $css[$key] = replace_url($value, 'file');
             }
         }
-        $html = '<!doctype html><html lang="zh"><head><meta charset="UTF-8"><title>';
+        $html = '<!doctype html><html lang="zh"><head><meta charset="UTF-8"><meta http-equiv="Access-Control-Allow-Origin" content="*"><title>';
         $html .= $title;
         $html .= '</title>';
         foreach ($css as $key => $value) {
