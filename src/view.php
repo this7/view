@@ -33,6 +33,12 @@ class view extends compile {
     public $style = null;
 
     /**
+     * [$style description]
+     * @var null
+     */
+    public $json = null;
+
+    /**
      * 扩展信息
      * @var [type]
      */
@@ -58,7 +64,7 @@ class view extends compile {
             $this->url = $_GET['app'] . "/" . $_GET['model'] . "/" . $_GET['action'];
         }
         #获取配置信息
-        $app = get_json(ROOT_DIR . DS . 'client/app.json');
+        $this->json = get_json(ROOT_DIR . DS . 'client/app.json');
         #获取HTML内容
         $body     = file_get_contents(ROOT_DIR . DS . $this->url . '.html');
         $template = $style = $script = $json = $config = null;
@@ -75,6 +81,12 @@ class view extends compile {
             $json       = $matchs[2];
             $config     = to_array($json);
             $compontent = null;
+            if (isset($config['style'])) {
+                $this->json['style'] = isset($this->json['style']) ? array_merge($this->json['style'], $config['style']) : $config['style'];
+            }
+            if (isset($config['script'])) {
+                $this->json['script'] = isset($this->json['script']) ? array_merge($this->json['script'], $config['script']) : $config['script'];
+            }
             if (isset($config['components'])) {
                 $this->style = '';
                 foreach ($config['components'] as $key => $value) {
@@ -133,6 +145,12 @@ class view extends compile {
             $json       = $matchs[2];
             $config     = to_array($json);
             $compontent = null;
+            if (isset($config['style'])) {
+                $this->json['style'] = isset($this->json['style']) ? array_merge($this->json['style'], $config['style']) : $config['style'];
+            }
+            if (isset($config['script'])) {
+                $this->json['script'] = isset($this->json['script']) ? array_merge($this->json['script'], $config['script']) : $config['script'];
+            }
             if (isset($config['components'])) {
                 foreach ($config['components'] as $key => $value) {
                     $compontent .= '"' . $key . '":' . $key . ",";
@@ -160,21 +178,21 @@ class view extends compile {
      * @param string $value [description]
      */
     public function setHtmlCode($title = 'THIS7', $body = '', $script = '', $style = '') {
-        $json = to_array(file_get_contents(ROOT_DIR . DS . 'client' . DS . 'app.json'));
-        $js   = $css   = array();
+        $js = $css = array();
         #判断是否有加载其他外部JS
-        if (isset($json['script'])) {
-            foreach ($json['script'] as $key => $value) {
+        if (isset($this->json['script'])) {
+
+            foreach ($this->json['script'] as $key => $value) {
                 $js[$key] = replace_url($value, 'file');
             }
         }
         #判断是否有加载其他外部CSS
-        if (isset($json['style'])) {
-            foreach ($json['style'] as $key => $value) {
+        if (isset($this->json['style'])) {
+            foreach ($this->json['style'] as $key => $value) {
                 $css[$key] = replace_url($value, 'file');
             }
         }
-        $html = '<!doctype html><html lang="zh"><head><meta charset="UTF-8"><meta http-equiv="Access-Control-Allow-Origin" content="*"><title>';
+        $html = '<!doctype html><html lang="zh"><head><meta charset="UTF-8"><title>';
         $html .= $title;
         $html .= '</title>';
         foreach ($css as $key => $value) {
