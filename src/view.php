@@ -21,6 +21,12 @@ class view extends compile {
     public $url;
 
     /**
+     * 全局组件数组
+     * @var [type]
+     */
+    public $globalcomponent = array();
+
+    /**
      * 组件数组
      * @var [type]
      */
@@ -65,6 +71,12 @@ class view extends compile {
         }
         #获取配置信息
         $this->json = get_json(ROOT_DIR . DS . 'client/app.json');
+        #判断全局组件
+        if (isset($this->json['components'])) {
+            foreach ($this->json['components'] as $key => $value) {
+                $this->globainamingresources($key, $value);
+            }
+        }
         #获取HTML内容
         $body     = file_get_contents(ROOT_DIR . DS . $this->url . '.html');
         $template = $style = $script = $json = $config = null;
@@ -88,7 +100,6 @@ class view extends compile {
                 $this->json['script'] = isset($this->json['script']) ? array_merge($this->json['script'], $config['script']) : $config['script'];
             }
             if (isset($config['components'])) {
-                $this->style = '';
                 foreach ($config['components'] as $key => $value) {
                     $compontent .= '"' . $key . '":' . $key . ",";
                     $this->components($key, $value);
@@ -125,6 +136,55 @@ class view extends compile {
         $content = ob_get_clean();
         echo $content;
         exit;
+    }
+
+    /**
+     * 全局配置组件
+     * @Author   Sean       Yan
+     * @DateTime 2018-06-28
+     * @param    string     $value [description]
+     * @return   [type]            [description]
+     */
+    public function globainamingresources($key, $value = '') {
+        $body     = file_get_contents(ROOT_DIR . DS . 'client' . DS . $value . '.html');
+        $template = $style = $script = $json = null;
+        if (preg_match('#<template(.*?)>(.*?)<\/template>#is', $body, $matchs)) {
+            $template = $matchs[2];
+        }
+        if (preg_match('#<style(.*?)>(.*?)<\/style>#is', $body, $matchs)) {
+            $this->style .= $matchs[2];
+        }
+        if (preg_match('#<json(.*?)>(.*?)<\/json>#is', $body, $matchs)) {
+            $json       = $matchs[2];
+            $config     = to_array($json);
+            $compontent = null;
+            if (isset($config['style'])) {
+                $this->json['style'] = isset($this->json['style']) ? array_merge($this->json['style'], $config['style']) : $config['style'];
+            }
+            if (isset($config['script'])) {
+                $this->json['script'] = isset($this->json['script']) ? array_merge($this->json['script'], $config['script']) : $config['script'];
+            }
+            if (isset($config['components'])) {
+                foreach ($config['components'] as $key => $value) {
+                    $compontent .= '"' . $key . '":' . $key . ",";
+                    $this->globainamingresources($key, $value);
+                }
+            }
+        }
+        if (preg_match('#<script(.*?)>(.*?)<\/script>#is', $body, $matchs)) {
+            $script = $matchs[2];
+            $string = "{";
+            if (!empty($compontent)) {
+                $string .= 'components:{' . trim($compontent, ",") . '},';
+            }
+            $script = preg_replace("/\{/", $string, $script, 1);
+        }
+        $t = str_replace(array("\r\n", "\r", "\n"), " ", $template);
+
+        $data = "Vue.component('" . $key . "'," . substr(trim($script), 0, -1) . ",template:'" . str_replace("'", "\'", $t) . "'});";
+        #返回全局组件列表
+        $this->globalcomponent[] = $data;
+
     }
 
     /**
@@ -206,6 +266,9 @@ class view extends compile {
             $html .= '<script src="' . $value . '?' . time() . '"></script>';
         }
         $html .= '<script type="text/javascript">';
+        foreach ($this->globalcomponent as $key => $value) {
+            $html .= $value;
+        }
         $html .= $script;
         $html .= '</script></body></html>';
         return $html;
