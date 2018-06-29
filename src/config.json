@@ -4,9 +4,19 @@
         "name": "延时加载",
         "value": false
     },
-    "library":
+    "method":
     {
-        "name": "标签库",
-        "value": "uikit"
+        "name": "调用方法",
+        "value": "vue"
+    },
+    "postfix":
+    {
+        "name": "后缀名",
+        "value": ".html"
+    },
+    "template":
+    {
+        "name": "模板目录",
+        "value": "temp/template"
     }
 }

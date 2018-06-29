@@ -17,8 +17,8 @@ abstract class basics {
     protected $view;
     protected $left;
     protected $right;
-    protected $exp
-    = [
+    protected $compontent;
+    protected $exp = [
         '/\s+eq\s+/'  => '==',
         '/\s+neq\s+/' => '!=',
         '/\s+gt\s+/'  => '>',
@@ -30,16 +30,17 @@ abstract class basics {
     /**
      * 解析标签
      *
-     * @param  [string] $content 模板内容
-     * @param  [object] &$view   视图对象
-     *
+     * @param  [string] $content        模板内容
+     * @param  [object] &$view          视图对象
+     * @param  [object] $is_compontent  是否为组件
      * @return [string]          解析后内容
      */
-    public function parse($content, &$view) {
-        $this->content = $content;
-        $this->view    = $view;
-        $this->left    = "<";
-        $this->right   = ">";
+    public function parse($content, &$view, $compontent = false) {
+        $this->content    = $content;
+        $this->view       = $view;
+        $this->compontent = $compontent;
+        $this->left       = "<";
+        $this->right      = ">";
 
         #解析标签
         foreach ($this->tags as $tag => $param) {
@@ -144,7 +145,7 @@ abstract class basics {
      */
     private function getAttr($con) {
         $attr = [];
-        $preg = '#([\:\w\-]+)\s*=\s*([\'"])(.*?)\2#i';
+        $preg = '#([\w\-]+)\s*=\s*([\'"])(.*?)\2#i';
         if (preg_match_all($preg, $con, $matches)) {
             foreach ($matches[1] as $i => $name) {
                 $attr[$name] = preg_replace(array_keys($this->exp), array_values($this->exp), $matches[3][$i]);
