@@ -30,7 +30,7 @@ class labels extends basics {
     public function _img($attr, $content, &$ubdata) {
         if (isset($attr['src'])) {
             $attr['src'] = replace_url($attr['src'], 'file');
-            return $this->recover('img', $attr, 'block');
         }
+        return $this->recover('img', $attr, 'block');
     }
 }

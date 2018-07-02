@@ -10,6 +10,7 @@
  * @link      http://www.ub-7.com
  */
 namespace this7\view\build;
+use Exception;
 
 class compile {
     /**
@@ -51,6 +52,10 @@ class compile {
      * @return string
      */
     public function run() {
+        if (!is_file($this->view->tpl)) {
+            throw new Exception('模版文件(' . $this->view->tpl . ')不存在', -2);
+            die();
+        }
         #模板内容
         $this->content = file_get_contents($this->view->tpl);
 
@@ -58,7 +63,7 @@ class compile {
         $this->module();
 
         #解析标签
-        $this->tags();
+        //$this->tags();
 
         #解析全局变量与常量
         $this->globalParse();
@@ -152,7 +157,7 @@ class compile {
     public function tags() {
         #标签库
         $tags = array('\this7\view\build\labels');
-        #解析标签
+        // #解析标签
         foreach ($tags as $class) {
             $obj           = new $class();
             $this->content = $obj->parse($this->content, $this->view);

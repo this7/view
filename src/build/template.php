@@ -47,6 +47,8 @@ class template extends basics {
         if ($this->compontent) {
             #设置KEY
             $key = $this->compontent;
+            #解析组件标签
+            $content = $this->tags($content);
             #存储组件
             $this->view->html['compontent'][$key]['template'] = str_replace('"', '\"', compress_html($content));
         } else {
@@ -116,5 +118,19 @@ class template extends basics {
         }
         $array = to_array($content);
         $this->view->json($array, $this);
+    }
+
+    /**
+     * 解析标签
+     */
+    public function tags($content) {
+        #标签库
+        $tags = array('\this7\view\build\labels');
+        // #解析标签
+        foreach ($tags as $class) {
+            $obj     = new $class();
+            $content = $obj->parse($content, $this->view);
+            return $content;
+        }
     }
 }
