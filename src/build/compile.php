@@ -28,7 +28,7 @@ class compile {
         "css"        => [],
         "js"         => [],
         "script"     => "",
-        "style"      => "",
+        "style"      => [],
         "body"       => "",
         "compontent" => []
     );
