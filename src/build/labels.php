@@ -24,7 +24,7 @@ class labels extends basics {
     public $tags
     = [
         'img' => ['block' => FALSE],
-        'a'   => ['block' => TRUE, 'level' => 5],
+        'a'   => ['block' => FALSE],
     ];
 
     //img标签地址转换
@@ -37,8 +37,8 @@ class labels extends basics {
 
     //a标签地址转换
     public function _a($attr, $content, &$ubdata) {
-        if (isset($attr['helf'])) {
-            $attr['helf'] = replace_url($attr['helf'], 'file');
+        if (isset($attr['href']) && !empty($attr['href'])) {
+            $attr['href'] = replace_url($attr['href'], 'link');
         }
         return $this->recover('a', $attr, 'block');
     }
