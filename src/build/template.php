@@ -70,6 +70,19 @@ class template extends basics {
         if (!$content) {
             return;
         }
+        #设置KEY
+        $key = $this->compontent;
+        if ($key) {
+            $this->view->html['compontent'][$key]['script'] = $content;
+        } else {
+            $this->view->html['script'] = $content;
+        }
+    }
+
+    public function _script_v1($value = '') {
+        if (!$content) {
+            return;
+        }
         $preg = '#(export\s+default[\s]*{)#is';
         #设置KEY
         $key = $this->compontent;
@@ -85,8 +98,8 @@ class template extends basics {
         } else {
             $this->view->html['script'] = $content;
         }
-
     }
+
     /**
      * 获取样式信息
      * @Author   Sean       Yan

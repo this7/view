@@ -10,7 +10,6 @@
  * @link      http://www.ub-7.com
  */
 namespace this7\view\build;
-use Exception;
 
 class compile {
     /**
@@ -53,8 +52,39 @@ class compile {
      */
     public function run() {
         if (!is_file($this->view->tpl)) {
-            throw new Exception('模版文件(' . $this->view->tpl . ')不存在', -2);
-            die();
+            $name = md5($this->view->tpl);
+            if (isset($_GET['key']) && $_GET['key'] == $name) {
+                $tpl = <<<TPL
+<template>
+    <div class="this7">
+        欢迎使用This7框架
+    </div>
+</template>
+<style type="text/css">
+
+</style>
+<script type="text/javascript">
+export default {
+    data: {
+
+    },
+    method: {
+
+    },
+    mounted: function() {
+
+    }
+}
+</script>
+<json>
+</json>
+TPL;
+                to_mkdir($this->view->tpl, $tpl, true, true);
+                redirect($_GET['model'] . '/' . $_GET['action']);
+            }
+            $url = site_url($_GET['model'] . "/" . $_GET['action'], "key/" . $name);
+            echo "您访问的页面不存在，<a href='" . $url . "'>点击此处立即创建</a>";
+            exit();
         }
         #模板内容
         $this->content = file_get_contents($this->view->tpl);
@@ -78,7 +108,46 @@ class compile {
      * @DateTime 2018-06-28
      */
     public function module() {
+        #执行模块编译
+        $obj = new template();
+        #获取主配置
+        $array = get_json(ROOT_DIR . DS . 'client/app.json');
+        $this->json($array, $obj);
+        #编译模块
+        $obj->parse($this->content, $this);
+        #执行HTML合并
+        $html = '<!doctype html><html lang="zh"><head><meta charset="UTF-8"><meta http-equiv="Access-Control-Allow-Origin" content="*"><title>';
+        $html .= $this->html['title'];
+        $html .= '</title>';
+        foreach ($this->html['css'] as $key => $value) {
+            $html .= '<link rel="stylesheet" type="text/css" href="' . replace_url($value, 'file') . '?' . time() . '">';
+        }
+        foreach ($this->html['style'] as $key => $value) {
+            $html .= '<style type="text/css">' . $value . '</style>';
+        }
+        #设置初始化
+        $html .= '<script type="text/javascript">var exports={};</script>';
+        #设置内容
+        $html .= '</head><body><div id="app">';
+        $html .= $this->html['body'];
+        $html .= '</div>';
+        foreach ($this->html['js'] as $key => $value) {
+            $html .= '<script src="' . replace_url($value, 'file') . '?' . time() . '"></script>';
+        }
 
+        foreach ($this->html['compontent'] as $key => $value) {
+            $html .= '<script type="text/babel">';
+            $html .= $value['script'];
+            $html .= "exports.default.template=" . '"' . $value['template'] . '";';
+            $html .= "Vue.component('stroke',exports.default)</script>";
+        }
+        $html .= '<script type="text/babel">' . $this->html['script'];
+        $html .= ';exports.default.el = "#app";var app = new Vue(exports.default);</script>';
+        $html .= '</body></html>';
+        $this->content = $html;
+    }
+
+    public function module_v1($value = '') {
         #执行模块编译
         $obj = new template();
         #获取主配置
@@ -111,7 +180,6 @@ class compile {
         }
         $html .= $this->html['script'];
         $html .= 'var defaulted = { el: "#app" };client.extend(app, defaulted);app = new Vue(app);</script></body></html>';
-        $this->content = $html;
     }
 
     /**
