@@ -5,10 +5,11 @@
  * @Author: else
  * @Date:   2018-06-28 14:07:29
  * @Last Modified by:   else
- * @Last Modified time: 2018-06-28 14:46:56
+ * @Last Modified time: 2018-07-30 10:09:58
  */
 namespace this7\view;
 use this7\view\build\analysis;
+use this7\view\build\singleton;
 
 class view {
 
@@ -30,7 +31,15 @@ class view {
 
     //更改缓存驱动
     protected function driver() {
-        $this->link = new analysis($this->app);
+        $method = C("view", "method");
+        switch ($method) {
+        case 'vue':
+            $this->link = new analysis($this->app);
+            break;
+        case 'html':
+            $this->link = new singleton($this->app);
+            break;
+        }
 
         return $this;
     }

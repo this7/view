@@ -162,15 +162,16 @@ TPL;
         foreach ($this->html['css'] as $key => $value) {
             $html .= '<link rel="stylesheet" type="text/css" href="' . replace_url($value, 'file') . '?' . time() . '">';
         }
+        foreach ($this->html['js'] as $key => $value) {
+            $html .= '<script src="' . replace_url($value, 'file') . '?' . time() . '"></script>';
+        }
         foreach ($this->html['style'] as $key => $value) {
             $html .= '<style type="text/css">' . $value . '</style>';
         }
         $html .= '</head><body><div id="app">';
         $html .= $this->html['body'];
         $html .= '</div>';
-        foreach ($this->html['js'] as $key => $value) {
-            $html .= '<script src="' . replace_url($value, 'file') . '?' . time() . '"></script>';
-        }
+
         $html .= '<script type="text/javascript">';
         foreach ($this->html['compontent'] as $key => $value) {
             $html .= $value['script'];
