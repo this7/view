@@ -93,7 +93,7 @@ TPL;
         $this->module();
 
         #解析标签
-        //$this->tags();
+        $this->tags();
 
         #解析全局变量与常量
         $this->globalParse();
@@ -122,6 +122,10 @@ TPL;
         foreach ($this->html['css'] as $key => $value) {
             $html .= '<link rel="stylesheet" type="text/css" href="' . replace_url($value, 'file') . '?' . time() . '">';
         }
+        foreach ($this->html['js'] as $key => $value) {
+            $html .= '<script src="' . replace_url($value, 'file') . '?' . time() . '"></script>';
+        }
+
         foreach ($this->html['style'] as $key => $value) {
             $html .= '<style type="text/css">' . $value . '</style>';
         }
@@ -131,15 +135,12 @@ TPL;
         $html .= '</head><body><div id="app">';
         $html .= $this->html['body'];
         $html .= '</div>';
-        foreach ($this->html['js'] as $key => $value) {
-            $html .= '<script src="' . replace_url($value, 'file') . '?' . time() . '"></script>';
-        }
-
+        #输出组件内容
         foreach ($this->html['compontent'] as $key => $value) {
             $html .= '<script type="text/babel">';
             $html .= $value['script'];
             $html .= "exports.default.template=" . '"' . $value['template'] . '";';
-            $html .= "Vue.component('stroke',exports.default)</script>";
+            $html .= "Vue.component('" . $key . "',exports.default)</script>";
         }
         $html .= '<script type="text/babel">' . $this->html['script'];
         $html .= ';exports.default.el = "#app";var app = new Vue(exports.default);</script>';
@@ -162,16 +163,15 @@ TPL;
         foreach ($this->html['css'] as $key => $value) {
             $html .= '<link rel="stylesheet" type="text/css" href="' . replace_url($value, 'file') . '?' . time() . '">';
         }
-        foreach ($this->html['js'] as $key => $value) {
-            $html .= '<script src="' . replace_url($value, 'file') . '?' . time() . '"></script>';
-        }
         foreach ($this->html['style'] as $key => $value) {
             $html .= '<style type="text/css">' . $value . '</style>';
         }
         $html .= '</head><body><div id="app">';
         $html .= $this->html['body'];
         $html .= '</div>';
-
+        foreach ($this->html['js'] as $key => $value) {
+            $html .= '<script src="' . replace_url($value, 'file') . '?' . time() . '"></script>';
+        }
         $html .= '<script type="text/javascript">';
         foreach ($this->html['compontent'] as $key => $value) {
             $html .= $value['script'];
