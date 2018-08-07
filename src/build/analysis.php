@@ -33,6 +33,12 @@ class analysis {
     public $compile;
 
     /**
+     * 当前驱动
+     * @var [type]
+     */
+    public $drive;
+
+    /**
      * 配置信息
      * @var [type]
      */
@@ -66,9 +72,23 @@ class analysis {
 
         #编译文件
         $compilePath   = C("view", "template");
-        $this->compile = $compilePath . "/" . md5($this->tpl) . '_' . basename($this->tpl) . '.php';
-        #编译文件
-        $this->compileFile();
+        $this->compile = $this->getFileNmae($this->tpl, ".php");
+
+        #选择显示编译
+        if (C("view", "prestrain")) {
+            #编译文件
+            $this->compileFile();
+        } else {
+            $file = $this->getFileNmae($this->tpl);
+            if (!file_exists($file)
+                || (filemtime($file) < filemtime($this->compile))
+                || (filemtime($this->tpl) > filemtime($this->compile))
+            ) {
+                $this->compileFile();
+            } else {
+                $this->compile = $file;
+            }
+        }
         #释放变量到全局
         if (!empty(self::$vars)) {
             extract(self::$vars);
@@ -103,14 +123,17 @@ class analysis {
      * @return bool|string
      * @throws Exception
      */
-    public function getTemplateFile($file = NULL) {
+    public function getTemplateFile($file = NULL, $array = []) {
+        if (empty($array)) {
+            $array = $_GET;
+        }
         if (is_file($file)) {
             return $file;
         } else if (!is_file($file)) {
-            if ($_GET['app'] == 'client') {
-                return ROOT_DIR . DS . "client/pages/" . $_GET['model'] . "/" . $_GET['action'] . C("view", "postfix");
+            if ($array['app'] == 'client') {
+                return ROOT_DIR . DS . "client/pages/" . $array['model'] . "/" . $array['action'] . C("view", "postfix");
             } else {
-                return ROOT_DIR . DS . $_GET['app'] . "/" . $_GET['model'] . "/" . $_GET['action'] . C("view", "postfix");
+                return ROOT_DIR . DS . $array['app'] . "/" . $array['model'] . "/" . $array['action'] . C("view", "postfix");
             }
         }
         if (DEBUG) {
@@ -135,18 +158,101 @@ class analysis {
         return cache::get($cacheName);
     }
 
-    //编译文件
+    /**
+     * 编译文件
+     * @Author   Sean       Yan
+     * @DateTime 2018-08-03
+     * @return   [type]     [description]
+     */
     private function compileFile() {
         $status = DEBUG || !file_exists($this->compile)
         || !is_file($this->compile)
             || (filemtime($this->tpl) > filemtime($this->compile));
         if ($status) {
             #执行文件编译
-            $compile = new compile($this);
-            $content = $compile->run();
+            if (C("view", "prestrain")) {
+                $compile = new prestrain($this);
+                $content = $compile->run();
+            } else {
+                $compile = new compile($this);
+                $content = $compile->run();
+            }
             #创建编译文件
             to_mkdir($this->compile, $content, true, true);
         }
+    }
+
+    /**
+     * @Author   Sean       Yan
+     * @DateTime 2018-08-03
+     * @param    string     $value [description]
+     * @return   [type]            [description]
+     */
+    public function saveES5($value = '') {
+        $key = $_POST['keyword'] . "_" . md5($_POST['keyword']);
+        cache::set($key, $_POST['body'], 80);
+    }
+
+    /**
+     * @Author   Sean       Yan
+     * @DateTime 2018-08-03
+     * @param    string     $value [description]
+     * @return   [type]            [description]
+     */
+    public function showES5($value = '') {
+        $html  = cache::get('html_' . md5('html'));
+        $label = to_array(cache::get('labe_l' . md5('label')));
+        $html .= '<script type="text/javascript">';
+        foreach ($label as $key => $value) {
+            $html .= cache::get($value . "_" . md5($value));
+        }
+        $html .= '</script></body></html>';
+        $arr   = explode('-', $_GET['web']);
+        $array = array(
+            'app'    => 'client',
+            'model'  => $arr[0],
+            'action' => $arr[1],
+        );
+        $tpl     = $this->getTemplateFile('', $array);
+        $compile = $this->getFileNmae($tpl, ".php");
+        $file    = $this->getFileNmae($tpl);
+        $status  = DEBUG || !file_exists($compile)
+            || (filemtime($tpl) > filemtime($compile));
+        if ($status) {
+            #创建编译文件
+            to_mkdir($file, $html, true, true);
+        }
+        redirect($array['model'] . '/' . $array['action']);
+    }
+
+    /**
+     * 获取文件名
+     * @Author   Sean       Yan
+     * @DateTime 2018-08-03
+     * @param    string     $value [description]
+     * @return   [type]            [description]
+     */
+    public function getFileNmae($file = '', $suffix = '') {
+        $compilePath = C("view", "template");
+        return $compilePath . "/" . md5($file) . '_' . basename($file) . $suffix;
+    }
+
+    /**
+     * 获取行号
+     * @Author   Sean       Yan
+     * @DateTime 2018-08-03
+     * @param    string     $value [description]
+     */
+    public function getLine($value = '') {
+        $line  = 0;
+        $comma = explode(PHP_EOL, $this->content);
+        preg_match('#<script(.+?)>#i', $this->content, $matches);
+        foreach ($comma as $key => $value) {
+            if (strval($value) == strval($matches[0])) {
+                $line = $key;
+            }
+        }
+        return $line + 2;
     }
 
     /**

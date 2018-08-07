@@ -9,6 +9,11 @@
         "name": "调用方法",
         "value": "vue"
     },
+    "prestrain":
+    {
+        "name": "预编译模式",
+        "value": false
+    },
     "postfix":
     {
         "name": "后缀名",

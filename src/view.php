@@ -5,7 +5,7 @@
  * @Author: else
  * @Date:   2018-06-28 14:07:29
  * @Last Modified by:   qinuoyun
- * @Last Modified time: 2018-07-31 17:21:16
+ * @Last Modified time: 2018-08-03 11:08:51
  */
 namespace this7\view;
 use this7\view\build\analysis;
@@ -48,7 +48,6 @@ class view {
         if (is_null($this->link)) {
             $this->driver();
         }
-
         return call_user_func_array([$this->link, $method], $params);
     }
 

@@ -79,27 +79,6 @@ class template extends basics {
         }
     }
 
-    public function _script_v1($value = '') {
-        if (!$content) {
-            return;
-        }
-        $preg = '#(export\s+default[\s]*{)#is';
-        #设置KEY
-        $key = $this->compontent;
-        if (preg_match($preg, $content, $matchs)) {
-            if ($key) {
-                $content = preg_replace($preg, "var " . $key . md5($key) . " = {", $content);
-            } else {
-                $content = preg_replace($preg, "var app = {", $content);
-            }
-        }
-        if ($key) {
-            $this->view->html['compontent'][$key]['script'] = $content;
-        } else {
-            $this->view->html['script'] = $content;
-        }
-    }
-
     /**
      * 获取样式信息
      * @Author   Sean       Yan

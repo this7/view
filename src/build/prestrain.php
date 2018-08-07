@@ -11,24 +11,12 @@
  */
 namespace this7\view\build;
 
-class compile {
+class prestrain {
     /**
      * 视图对象
      * @var [type]
      */
     private $view;
-
-    /**
-     * 编译内容
-     * @var [type]
-     */
-    public $body;
-
-    /**
-     * 编译内容
-     * @var [type]
-     */
-    public $url = 'http://www.this7.com/demo.php';
 
     /**
      * 页面内容
@@ -101,11 +89,11 @@ TPL;
         #模板内容
         $this->content = file_get_contents($this->view->tpl);
 
-        #解析标签
-        $this->tags();
-
         #解析模块
         $this->module();
+
+        #解析标签
+        $this->tags();
 
         #解析全局变量与常量
         $this->globalParse();
@@ -140,8 +128,6 @@ TPL;
     public function module() {
         #执行模块编译
         $obj = new template();
-        #组件存储
-        $arr = [];
         #获取主配置
         $array = get_json(ROOT_DIR . DS . 'client/app.json');
         $this->json($array, $obj);
@@ -157,6 +143,7 @@ TPL;
         foreach ($this->html['js'] as $key => $value) {
             $html .= '<script src="' . replace_url($value, 'file') . '?' . time() . '"></script>';
         }
+
         foreach ($this->html['style'] as $key => $value) {
             $html .= '<style type="text/css">' . $value . '</style>';
         }
@@ -166,24 +153,52 @@ TPL;
         $html .= '</head><body><div id="app">';
         $html .= $this->html['body'];
         $html .= '</div>';
-        cache::set('html_' . md5('html'), $html, 80);
         #输出组件内容
         foreach ($this->html['compontent'] as $key => $value) {
-            $html .= '<script type="text/babel" id="' . $key . '">';
+            $html .= '<script type="text/babel">';
             $html .= $value['script'];
             $html .= "exports.default.template=" . '"' . $value['template'] . '";';
-            $html .= "Vue.component('" . $key . "',exports.default);</script>";
-            $arr[] = $key;
+            $html .= "Vue.component('" . $key . "',exports.default)</script>";
         }
-        $arr[] = 'body';
-        cache::set('labe_l' . md5('label'), to_json($arr), 80);
-        $html .= '<script type="text/babel" id="body">' . $this->html['script'];
+        $html .= '<script type="text/babel">' . $this->html['script'];
         $html .= ';exports.default.el = "#app";var app = new Vue(exports.default);</script>';
-        $html .= '<script type="text/javascript">';
-        $html .= 'window.location = "http://www.this7.com/system/view/showES5/web/' . $_GET['model'] . '-' . $_GET['action'] . '";';
-        $html .= '</script>';
         $html .= '</body></html>';
         $this->content = $html;
+    }
+
+    public function module_v1($value = '') {
+        #执行模块编译
+        $obj = new template();
+        #获取主配置
+        $array = get_json(ROOT_DIR . DS . 'client/app.json');
+        $this->json($array, $obj);
+        #编译模块
+        $obj->parse($this->content, $this);
+        #执行HTML合并
+        $html = '<!doctype html><html lang="zh"><head><meta charset="UTF-8"><meta http-equiv="Access-Control-Allow-Origin" content="*"><title>';
+        $html .= $this->html['title'];
+        $html .= '</title>';
+        foreach ($this->html['css'] as $key => $value) {
+            $html .= '<link rel="stylesheet" type="text/css" href="' . replace_url($value, 'file') . '?' . time() . '">';
+        }
+        foreach ($this->html['style'] as $key => $value) {
+            $html .= '<style type="text/css">' . $value . '</style>';
+        }
+        $html .= '</head><body><div id="app">';
+        $html .= $this->html['body'];
+        $html .= '</div>';
+        foreach ($this->html['js'] as $key => $value) {
+            $html .= '<script src="' . replace_url($value, 'file') . '?' . time() . '"></script>';
+        }
+        $html .= '<script type="text/javascript">';
+        foreach ($this->html['compontent'] as $key => $value) {
+            $html .= $value['script'];
+            $html .= "client.extend(" . $key . md5($key) . ', {"template":"' . $value['template'] . '"});';
+            //$html .= "console.log(" . $key . md5($key) . ")";
+            $html .= "Vue.component('" . $key . "'," . $key . md5($key) . ");";
+        }
+        $html .= $this->html['script'];
+        $html .= 'var defaulted = { el: "#app" };client.extend(app, defaulted);app = new Vue(app);</script></body></html>';
     }
 
     /**
