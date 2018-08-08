@@ -195,7 +195,11 @@ TPL;
         $html['script' . $i++] = ';exports.default.el = "#app";var app = new Vue(exports.default);</script>';
         $html['script' . $i++] = '<script type="text/javascript">';
 
-        $html['script' . $i++] = 'window.location = "' . ROOT . '/system/view/showES5/web/' . encrypt(to_json($_GET)) . '";';
+        cache::set($unique, to_json($_GET), 80);
+        #设置跳转链接
+        $url = site_url('system/view/showES5', array("web" => $unique));
+
+        $html['script' . $i++] = 'window.location.href= "' . $url . '";';
         $html['script' . $i++] = '</script>';
         $html['script' . $i++] = '</body></html>';
         $this->content         = implode(" ", $html);

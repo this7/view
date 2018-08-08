@@ -80,13 +80,19 @@ class analysis {
             $this->compileFile();
         } else {
             $file = $this->getFileNmae($this->tpl);
-            if (!file_exists($file)
-                || (filemtime($file) < filemtime($this->compile))
-                || (filemtime($this->tpl) > filemtime($this->compile))
-            ) {
-                $this->compileFile();
-            } else {
+
+            #开发页面删除并且生成页面存在时，直接调用生产页面
+            if (!file_exists($this->tpl) && file_exists($file)) {
                 $this->compile = $file;
+            } else {
+                if (!file_exists($file)
+                    || (filemtime($file) < filemtime($this->compile))
+                    || (filemtime($this->tpl) > filemtime($this->compile))
+                ) {
+                    $this->compileFile();
+                } else {
+                    $this->compile = $file;
+                }
             }
         }
         #释放变量到全局
@@ -198,8 +204,19 @@ class analysis {
      * @param    string     $value [description]
      * @return   [type]            [description]
      */
+    public function getES5($value = '') {
+        echo "系统功能";
+    }
+
+    /**
+     * @Author   Sean       Yan
+     * @DateTime 2018-08-03
+     * @param    string     $value [description]
+     * @return   [type]            [description]
+     */
     public function showES5($value = '') {
-        $data = to_array(decrypt($_GET['web']));
+
+        $data = to_array(cache::get($_GET['web']));
         #获取对应的Key值
         $key = 'babel' . md5('babel_this7');
         #获取列表
