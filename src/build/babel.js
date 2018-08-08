@@ -49507,7 +49507,9 @@
                     var base64 = this.toBase64();
                     var data = 'sourceMappingURL=data:application/json;charset=utf-8;base64,' + base64;
                     //console.log(data);
-                    return options && options.multiline ? '/*# ' + data + ' */' : '//# ' + data;
+                    //return options && options.multiline ? '/*# ' + data + ' */' : '//# ' + data;
+                    //删除备注信息
+                    return '';
                 };
 
                 // returns copy instead of original
@@ -63359,19 +63361,84 @@
                 var scriptEl = document.createElement('script');
                 scriptEl.text = transformCode(transformFn, script);
                 var datas = { "body": scriptEl.text, "keyword": script.id };
-                console.log(script.id);
-                $.ajax({
-                    type: 'POST',
-                    url: 'http://' + document.domain + '/system/view/saveES5',
-                    data: datas,
-                    success: function(e) {
-                        console.log(e);
-                    },
-                    error: function(e) {
-                        console.log(e);
-                    }
-                });
+                if (script.id != null) {
+                    // $.ajax({
+                    //     type: 'POST',
+                    //     url: 'http://' + document.domain + '/system/view/saveES5',
+                    //     data: datas,
+                    //     success: function(e) {
+                    //         //console.log(e);
+                    //     },
+                    //     error: function(e) {
+                    //         //console.log(e);
+                    //     }
+                    // });
+                    var url = 'http://' + document.domain + '/system/view/saveES5';
+
+                    ajax({
+                        type: "POST",
+                        url: url,
+                        dataType: "json",
+                        data: datas,
+                        beforeSend: function() {
+                            //some js code 
+                        },
+                        success: function(msg) {
+                            console.log(msg)
+                        },
+                        error: function() {
+                            console.log("error")
+                        }
+                    })
+
+                }
                 headEl.appendChild(scriptEl);
+            }
+
+            function ajax() {
+                var ajaxData = {
+                    type: arguments[0].type || "GET",
+                    url: arguments[0].url || "",
+                    async: arguments[0].async || "true",
+                    data: arguments[0].data || null,
+                    dataType: arguments[0].dataType || "text",
+                    contentType: arguments[0].contentType || "application/x-www-form-urlencoded",
+                    beforeSend: arguments[0].beforeSend || function() {},
+                    success: arguments[0].success || function() {},
+                    error: arguments[0].error || function() {}
+                }
+                ajaxData.beforeSend()
+                var xhr = createxmlHttpRequest();
+                xhr.responseType = ajaxData.dataType;
+                xhr.open(ajaxData.type, ajaxData.url, ajaxData.async);
+                xhr.setRequestHeader("Content-Type", ajaxData.contentType);
+                xhr.send(convertData(ajaxData.data));
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState == 4) {
+                        if (xhr.status == 200) {
+                            ajaxData.success(xhr.response)
+                        } else {
+                            ajaxData.error()
+                        }
+                    }
+                }
+            }
+
+            function createxmlHttpRequest() {
+                if (window.ActiveXObject) {
+                    return new ActiveXObject("Microsoft.XMLHTTP");
+                } else if (window.XMLHttpRequest) {
+                    return new XMLHttpRequest();
+                }
+            }
+
+            function convertData(data) {
+                var arr = [];
+                for (var name in data) {
+                    arr.push(encodeURIComponent(name) + "=" + encodeURIComponent(data[name]));
+                }
+                arr.push(("v=" + Math.random()).replace(".", ""));
+                return arr.join("&");
             }
 
             /**
@@ -63450,7 +63517,7 @@
                         async: script.hasAttribute('async'),
                         error: false,
                         executed: false,
-                        id:script.getAttribute("id"),
+                        id: script.getAttribute("id"),
                         plugins: getPluginsOrPresetsFromScript(script, 'data-plugins'),
                         presets: getPluginsOrPresetsFromScript(script, 'data-presets')
                     };

@@ -138,6 +138,8 @@ TPL;
      * @DateTime 2018-06-28
      */
     public function module() {
+        #页面唯一编号
+        $unique = md5(time() . microtime() . rand()) . "_";
         #执行模块编译
         $obj = new template();
         #组件存储
@@ -147,43 +149,56 @@ TPL;
         $this->json($array, $obj);
         #编译模块
         $obj->parse($this->content, $this);
+        $html = [];
+        $i    = 0;
         #执行HTML合并
-        $html = '<!doctype html><html lang="zh"><head><meta charset="UTF-8"><meta http-equiv="Access-Control-Allow-Origin" content="*"><title>';
-        $html .= $this->html['title'];
-        $html .= '</title>';
+        $html['html']  = '<!doctype html><html lang="zh"><head><meta charset="UTF-8"><meta http-equiv="Access-Control-Allow-Origin" content="*"><title>';
+        $html['title'] = $this->html['title'] . '</title>';
         foreach ($this->html['css'] as $key => $value) {
-            $html .= '<link rel="stylesheet" type="text/css" href="' . replace_url($value, 'file') . '?' . time() . '">';
+            $html['css' . $key] = '<link rel="stylesheet" type="text/css" href="' . replace_url($value, 'file') . '?' . time() . '">';
         }
+        #系统JS
+        $html['babel'] = '<script src="' . ROOT . "/vendor/this7/view/src/build/babel.js" . '?' . time() . '"></script>';
         foreach ($this->html['js'] as $key => $value) {
-            $html .= '<script src="' . replace_url($value, 'file') . '?' . time() . '"></script>';
+            $html['js' . $key] = '<script src="' . replace_url($value, 'file') . '?' . time() . '"></script>';
         }
         foreach ($this->html['style'] as $key => $value) {
-            $html .= '<style type="text/css">' . $value . '</style>';
+            $html['style' . $key] = '<style type="text/css">' . $value . '</style>';
         }
         #设置初始化
-        $html .= '<script type="text/javascript">var exports={};</script>';
+        $html['script' . $i++] = '<script type="text/javascript">var exports={};</script>';
         #设置内容
-        $html .= '</head><body><div id="app">';
-        $html .= $this->html['body'];
-        $html .= '</div>';
-        cache::set('html_' . md5('html'), $html, 80);
+        $html['script' . $i++] = '</head><body><div id="app">';
+        $html['script' . $i++] = $this->html['body'];
+        $html['script' . $i++] = '</div>';
+        $html_i                = $html;
+        $html_i                = array_remove($html_i, 'jquery');
+        $html_i                = array_remove($html_i, 'babel');
+        cache::set($unique . 'html', implode(" ", $html_i), 80);
         #输出组件内容
         foreach ($this->html['compontent'] as $key => $value) {
-            $html .= '<script type="text/babel" id="' . $key . '">';
-            $html .= $value['script'];
-            $html .= "exports.default.template=" . '"' . $value['template'] . '";';
-            $html .= "Vue.component('" . $key . "',exports.default);</script>";
-            $arr[] = $key;
+            $html['script' . $i++] = '<script type="text/babel" id="' . $unique . $key . '">';
+            $html['script' . $i++] = $value['script'];
+            $html['script' . $i++] = "exports.default.template=" . '"' . $value['template'] . '";';
+            $html['script' . $i++] = "Vue.component('" . $key . "',exports.default);</script>";
+            $arr['compontent'][]   = $unique . $key;
         }
-        $arr[] = 'body';
-        cache::set('labe_l' . md5('label'), to_json($arr), 80);
-        $html .= '<script type="text/babel" id="body">' . $this->html['script'];
-        $html .= ';exports.default.el = "#app";var app = new Vue(exports.default);</script>';
-        $html .= '<script type="text/javascript">';
-        $html .= 'window.location = "http://www.this7.com/system/view/showES5/web/' . $_GET['model'] . '-' . $_GET['action'] . '";';
-        $html .= '</script>';
-        $html .= '</body></html>';
-        $this->content = $html;
+
+        #设置存储名
+        $arr['body'] = $unique . 'body';
+        $arr['html'] = $unique . 'html';
+
+        #设置GET唯一键
+        $_GET['babel' . md5('babel_this7')] = to_json($arr);
+
+        $html['script' . $i++] = '<script type="text/babel" id="' . $unique . 'body">' . $this->html['script'];
+        $html['script' . $i++] = ';exports.default.el = "#app";var app = new Vue(exports.default);</script>';
+        $html['script' . $i++] = '<script type="text/javascript">';
+
+        $html['script' . $i++] = 'window.location = "' . ROOT . '/system/view/showES5/web/' . encrypt(to_json($_GET)) . '";';
+        $html['script' . $i++] = '</script>';
+        $html['script' . $i++] = '</body></html>';
+        $this->content         = implode(" ", $html);
     }
 
     /**

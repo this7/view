@@ -189,8 +189,7 @@ class analysis {
      * @return   [type]            [description]
      */
     public function saveES5($value = '') {
-        $key = $_POST['keyword'] . "_" . md5($_POST['keyword']);
-        cache::set($key, $_POST['body'], 80);
+        cache::set($_POST['keyword'], $_POST['body'], 60);
     }
 
     /**
@@ -200,29 +199,35 @@ class analysis {
      * @return   [type]            [description]
      */
     public function showES5($value = '') {
-        $html  = cache::get('html_' . md5('html'));
-        $label = to_array(cache::get('labe_l' . md5('label')));
+        $data = to_array(decrypt($_GET['web']));
+        #获取对应的Key值
+        $key = 'babel' . md5('babel_this7');
+        #获取列表
+        $babel = to_array($data[$key]);
+        #获取URL地址
+        $url = array_remove($data, $key);
+        #获取HTML信息
+        $html = cache::get($babel['html']);
         $html .= '<script type="text/javascript">';
-        foreach ($label as $key => $value) {
-            $html .= cache::get($value . "_" . md5($value));
+        foreach ($babel['compontent'] as $key => $value) {
+            $script = cache::get($value);
+            $html .= $script;
         }
+        $html .= cache::get($babel['body']);
         $html .= '</script></body></html>';
-        $arr   = explode('-', $_GET['web']);
-        $array = array(
-            'app'    => 'client',
-            'model'  => $arr[0],
-            'action' => $arr[1],
-        );
-        $tpl     = $this->getTemplateFile('', $array);
+        #设置模板信息
+        $tpl     = $this->getTemplateFile('', $url);
         $compile = $this->getFileNmae($tpl, ".php");
         $file    = $this->getFileNmae($tpl);
+        $url     = site_url($url);
         $status  = DEBUG || !file_exists($compile)
             || (filemtime($tpl) > filemtime($compile));
         if ($status) {
             #创建编译文件
             to_mkdir($file, $html, true, true);
         }
-        redirect($array['model'] . '/' . $array['action']);
+        redirect($url);
+        exit("这是系统");
     }
 
     /**
