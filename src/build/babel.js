@@ -63373,7 +63373,7 @@
                     //         //console.log(e);
                     //     }
                     // });
-                    var url = 'http://' + document.domain + '/system/view/saveES5';
+                    var url = document.location.protocol+'//' + document.domain + '/system/view/saveES5';
 
                     ajax({
                         type: "POST",

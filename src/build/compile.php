@@ -202,8 +202,7 @@ TPL;
 
         cache::set($unique, to_json($_GET), 80);
         #设置跳转链接
-        $url = site_url('system/view/showES5', array("web" => $unique));
-
+        $url                   = site_url('system/view/showES5', array("web" => $unique));
         $html['script' . $i++] = 'window.location.href= "' . $url . '";';
         $html['script' . $i++] = '</script>';
         $html['script' . $i++] = '</body></html>';
