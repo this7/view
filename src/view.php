@@ -4,8 +4,8 @@
  * This7 Frame
  * @Author: else
  * @Date:   2018-06-28 14:07:29
- * @Last Modified by:   qinuoyun
- * @Last Modified time: 2018-08-03 11:08:51
+ * @Last Modified by:   else
+ * @Last Modified time: 2018-08-09 10:07:01
  */
 namespace this7\view;
 use this7\view\build\analysis;
@@ -40,7 +40,6 @@ class view {
             $this->link = new singleton($this->app);
             break;
         }
-
         return $this;
     }
 

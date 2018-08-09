@@ -19,9 +19,24 @@
         "name": "后缀名",
         "value": ".html"
     },
+    "cache":
+    {
+        "name": "缓存目录",
+        "value": "temp/template"
+    },
     "template":
     {
         "name": "模板目录",
-        "value": "temp/template"
+        "value": "client/template"
+    },
+    "precode":
+    {
+        "name": "前置代码",
+        "value": []
+    },
+    "rearcode":
+    {
+        "name": "后置代码",
+        "value": []
     }
 }

@@ -139,7 +139,7 @@ TPL;
      */
     public function module() {
         #页面唯一编号
-        $unique = md5(time() . microtime() . rand()) . "_";
+        $unique = md5($this->view->tpl) . "_";
         #执行模块编译
         $obj = new template();
         #组件存储
@@ -154,6 +154,9 @@ TPL;
         #执行HTML合并
         $html['html']  = '<!doctype html><html lang="zh"><head><meta charset="UTF-8"><meta http-equiv="Access-Control-Allow-Origin" content="*"><title>';
         $html['title'] = $this->html['title'] . '</title>';
+        #前置代码
+        $html['precode'] = '<?php echo $precode;?>';
+        #输出CSS代码
         foreach ($this->html['css'] as $key => $value) {
             $html['css' . $key] = '<link rel="stylesheet" type="text/css" href="' . replace_url($value, 'file') . '?' . time() . '">';
         }
@@ -165,6 +168,8 @@ TPL;
         foreach ($this->html['style'] as $key => $value) {
             $html['style' . $key] = '<style type="text/css">' . $value . '</style>';
         }
+        #后置代码
+        $html['rearcode'] = '<?php echo $rearcode;?>';
         #设置初始化
         $html['script' . $i++] = '<script type="text/javascript">var exports={};</script>';
         #设置内容

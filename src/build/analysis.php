@@ -60,7 +60,7 @@ class analysis {
         }
         #缓存标识
         $cacheName = md5($_SERVER['REQUEST_URI'] . $this->tpl);
-        $cachePath = ROOT_DIR . DS . C("view", "template");
+        $cachePath = ROOT_DIR . DS . C("view", "cache");
         #缓存有效
         if ($expire > 0 && $content = cache::get($cacheName)) {
             if ($show) {
@@ -69,18 +69,17 @@ class analysis {
                 return $content;
             }
         }
-
+        $this->assign("precode", $this->preCode());
+        $this->assign("rearcode", $this->rearCode());
         #编译文件
-        $compilePath   = C("view", "template");
+        $compilePath   = C("view", "cache");
         $this->compile = $this->getFileNmae($this->tpl, ".php");
-
         #选择显示编译
         if (C("view", "prestrain")) {
             #编译文件
             $this->compileFile();
         } else {
-            $file = $this->getFileNmae($this->tpl);
-
+            $file = $this->getTemplate($this->tpl, ".php");
             #开发页面删除并且生成页面存在时，直接调用生产页面
             if (!file_exists($this->tpl) && file_exists($file)) {
                 $this->compile = $file;
@@ -115,6 +114,38 @@ class analysis {
         } else {
             return $content;
         }
+    }
+
+    /**
+     * 前置代码
+     * @Author   Sean       Yan
+     * @DateTime 2018-08-09
+     * @param    string     $value [description]
+     * @return   [type]            [description]
+     */
+    public function preCode() {
+        $codeList = C("view", 'precode');
+        $html     = '';
+        foreach ($codeList as $key => $value) {
+            $html .= $value();
+        }
+        return $html;
+    }
+
+    /**
+     * 后置代码
+     * @Author   Sean       Yan
+     * @DateTime 2018-08-09
+     * @param    string     $value [description]
+     * @return   [type]            [description]
+     */
+    public function rearCode($value = '') {
+        $codeList = C("view", 'rearcode');
+        $html     = '';
+        foreach ($codeList as $key => $value) {
+            $html .= $value();
+        }
+        return $html;
     }
 
     #获取显示内容
@@ -235,7 +266,7 @@ class analysis {
         #设置模板信息
         $tpl     = $this->getTemplateFile('', $url);
         $compile = $this->getFileNmae($tpl, ".php");
-        $file    = $this->getFileNmae($tpl);
+        $file    = $this->getTemplate($tpl, ".php");
         $url     = site_url($url);
         $status  = DEBUG || !file_exists($compile)
             || (filemtime($tpl) > filemtime($compile));
@@ -255,8 +286,20 @@ class analysis {
      * @return   [type]            [description]
      */
     public function getFileNmae($file = '', $suffix = '') {
-        $compilePath = C("view", "template");
+        $compilePath = C("view", "cache");
         return $compilePath . "/" . md5($file) . '_' . basename($file) . $suffix;
+    }
+
+    /**
+     * 获取模板文件
+     * @Author   Sean       Yan
+     * @DateTime 2018-08-03
+     * @param    string     $value [description]
+     * @return   [type]            [description]
+     */
+    public function getTemplate($file = '', $suffix = '') {
+        $compilePath = C("view", "template");
+        return $compilePath . "/" . md5($file) . $suffix;
     }
 
     /**
