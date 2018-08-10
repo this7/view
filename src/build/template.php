@@ -16,6 +16,9 @@ class template extends basics {
     //blade模板(父级)
     private $blade = [];
 
+    //less对象
+    private $less;
+
     //blockshow模板(父级)
     private static $widget = [];
 
@@ -91,6 +94,13 @@ class template extends basics {
     public function _style($attr, $content, &$ubdata) {
         if (!$content) {
             return;
+        }
+        if (isset($attr['lang']) && $attr['lang'] == 'less') {
+            require "lessc.inc.php";
+            if (!$this->less) {
+                $this->less = new \lessc;
+            }
+            $content = $this->less->compile($content);
         }
         $this->view->html['style'][] = compress_css($content);
     }
