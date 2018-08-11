@@ -140,6 +140,8 @@ TPL;
         foreach ($this->html['css'] as $key => $value) {
             $html .= '<link rel="stylesheet" type="text/css" href="' . replace_url($value, 'file') . '?' . time() . '">';
         }
+        #系统JS
+        $html .= '<script src="' . ROOT . "/vendor/this7/view/src/build/babel.mini.js" . '?' . time() . '"></script>';
         foreach ($this->html['js'] as $key => $value) {
             $html .= '<script src="' . replace_url($value, 'file') . '?' . time() . '"></script>';
         }
@@ -222,8 +224,9 @@ TPL;
         if (isset($array['components'])) {
             foreach ($array['components'] as $key => $value) {
                 $file    = ROOT_DIR . DS . "client/" . trim($value, "/") . C("view", "postfix");
+                $path    = dirname($file);
                 $content = file_get_contents($file);
-                $obj->parse($content, $this, $key);
+                $obj->parse($content, $this, $key, $path);
             }
         }
     }

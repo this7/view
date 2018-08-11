@@ -230,8 +230,9 @@ TPL;
         if (isset($array['components'])) {
             foreach ($array['components'] as $key => $value) {
                 $file    = ROOT_DIR . DS . "client/" . trim($value, "/") . C("view", "postfix");
+                $path    = dirname($file);
                 $content = file_get_contents($file);
-                $obj->parse($content, $this, $key);
+                $obj->parse($content, $this, $key, $path);
             }
         }
     }

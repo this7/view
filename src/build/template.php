@@ -13,13 +13,28 @@ namespace this7\view\build;
 
 #模板解析
 class template extends basics {
-    //blade模板(父级)
+    /**
+     * blade模板(父级)
+     * @var array
+     */
     private $blade = [];
 
-    //less对象
+    /**
+     * less对象
+     * @var [type]
+     */
     private $less;
 
-    //blockshow模板(父级)
+    /**
+     * scss对象
+     * @var [type]
+     */
+    private $scss;
+
+    /**
+     * blockshow模板(父级)
+     * @var array
+     */
     private static $widget = [];
 
     /**
@@ -70,6 +85,10 @@ class template extends basics {
      * @return   [type]              [description]
      */
     public function _script($attr, $content, &$ubdata) {
+        if (isset($attr['type']) && $attr['type'] == 'text/json') {
+            $this->_json($attr, $content, $ubdata);
+            return;
+        }
         if (!$content) {
             return;
         }
@@ -95,12 +114,30 @@ class template extends basics {
         if (!$content) {
             return;
         }
-        if (isset($attr['lang']) && $attr['lang'] == 'less') {
-            require "lessc.inc.php";
-            if (!$this->less) {
-                $this->less = new \lessc;
+        if ($this->compontent && !empty($this->path)) {
+            $file = $this->path . DS . "base.css";
+            if (file_exists($file)) {
+                $base    = file_get_contents($file);
+                $content = $base . $content;
             }
-            $content = $this->less->compile($content);
+        }
+        if (isset($attr['lang'])) {
+            switch (strtolower($attr['lang'])) {
+            case 'less':
+                require_once "lessc.inc.php";
+                if (!$this->less) {
+                    $this->less = new \lessc();
+                }
+                $content = $this->less->compile($content);
+                break;
+            case 'scss':
+                require_once "scss.inc.php";
+                if (!$this->scss) {
+                    $this->scss = new \scssc();
+                }
+                $content = $this->scss->compile($content);
+                break;
+            }
         }
         $this->view->html['style'][] = compress_css($content);
     }

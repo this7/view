@@ -15,6 +15,7 @@ namespace this7\view\build;
 abstract class basics {
     protected $content;
     protected $view;
+    protected $path;
     protected $left;
     protected $right;
     protected $compontent;
@@ -30,14 +31,16 @@ abstract class basics {
     /**
      * 解析标签
      *
-     * @param  [string] $content        模板内容
-     * @param  [object] &$view          视图对象
-     * @param  [object] $is_compontent  是否为组件
-     * @return [string]          解析后内容
+     * @param  string   $content        模板内容
+     * @param  object   &$view          视图对象
+     * @param  object   $is_compontent  是否为组件
+     * @param  string   $path           所在目录
+     * @return string                   解析后内容
      */
-    public function parse($content, &$view, $compontent = false) {
+    public function parse($content, &$view, $compontent = false, $path = "") {
         $this->content    = $content;
         $this->view       = $view;
+        $this->path       = $path;
         $this->compontent = $compontent;
         $this->left       = "<";
         $this->right      = ">";
