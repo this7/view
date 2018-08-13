@@ -5,11 +5,9 @@
  * @Author: else
  * @Date:   2018-06-28 14:07:29
  * @Last Modified by:   else
- * @Last Modified time: 2018-08-09 10:07:01
+ * @Last Modified time: 2018-08-13 10:40:20
  */
 namespace this7\view;
-use this7\view\build\analysis;
-use this7\view\build\singleton;
 
 class view {
 
@@ -29,28 +27,31 @@ class view {
         $this->app = $app;
     }
 
-    //更改缓存驱动
+    /**
+     * 设置执行驱动
+     * @Author   Sean       Yan
+     * @DateTime 2018-08-13
+     * @return   [type]     [description]
+     */
     protected function driver() {
         $method = C("view", "method");
         switch ($method) {
         case 'vue':
-            $this->link = new analysis($this->app);
+            $this->link = new module\vue($this->app);
             break;
         case 'html':
-            $this->link = new singleton($this->app);
+            $this->link = new module\html($this->app);
             break;
         }
         return $this;
     }
 
-    public function __call($method, $params = []) {
-        if (is_null($this->link)) {
-            $this->driver();
-        }
-        return call_user_func_array([$this->link, $method], $params);
-    }
-
-    //生成单例对象
+    /**
+     * 挂在链接
+     * @Author   Sean       Yan
+     * @DateTime 2018-08-13
+     * @return   [type]     [description]
+     */
     public static function single() {
         static $link;
         if (is_null($link)) {
@@ -58,6 +59,13 @@ class view {
         }
 
         return $link;
+    }
+
+    public function __call($method, $params = []) {
+        if (is_null($this->link)) {
+            $this->driver();
+        }
+        return call_user_func_array([$this->link, $method], $params);
     }
 
     public static function __callStatic($name, $arguments) {

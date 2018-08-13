@@ -9,9 +9,9 @@
  * @license   http://www.opensource.org/licenses/mit-license.php MIT
  * @link      http://www.ub-7.com
  */
-namespace this7\view\build;
+namespace this7\view\module;
 
-class singleton {
+class html {
     /**
      * 单例显示
      * @Author   Sean       Yan

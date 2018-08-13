@@ -9,7 +9,7 @@
  * @license   http://www.opensource.org/licenses/mit-license.php MIT
  * @link      http://www.ub-7.com
  */
-namespace this7\view\build;
+namespace this7\view\label;
 
 #模板解析
 class labels extends basics {

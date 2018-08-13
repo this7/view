@@ -9,7 +9,7 @@
  * @license   http://www.opensource.org/licenses/mit-license.php MIT
  * @link      http://www.ub-7.com
  */
-namespace this7\view\build;
+namespace this7\view\label;
 
 #模板解析
 class template extends basics {
@@ -124,14 +124,14 @@ class template extends basics {
         if (isset($attr['lang'])) {
             switch (strtolower($attr['lang'])) {
             case 'less':
-                require_once "lessc.inc.php";
+                require_once dirname(dirname(__FILE__)) . "/bin/lessc.inc.php";
                 if (!$this->less) {
                     $this->less = new \lessc();
                 }
                 $content = $this->less->compile($content);
                 break;
             case 'scss':
-                require_once "scss.inc.php";
+                require_once dirname(dirname(__FILE__)) . "/bin/scss.inc.php";
                 if (!$this->scss) {
                     $this->scss = new \scssc();
                 }
@@ -164,7 +164,7 @@ class template extends basics {
      */
     public function tags($content) {
         #标签库
-        $tags = array('\this7\view\build\labels');
+        $tags = array('\this7\view\label\labels');
         // #解析标签
         foreach ($tags as $class) {
             $obj     = new $class();

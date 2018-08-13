@@ -12,7 +12,7 @@
     "prestrain":
     {
         "name": "预编译模式",
-        "value": true
+        "value": false
     },
     "postfix":
     {
