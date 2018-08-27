@@ -36,7 +36,8 @@ class compile {
         "script"     => "",
         "style"      => [],
         "body"       => "",
-        "compontent" => []
+        "compontent" => [],
+        "routeView"  => []
     );
 
     /**
@@ -158,14 +159,19 @@ TPL;
         #后置代码
         $html['rearcode'] = '<?php echo $rearcode;?>';
         #设置初始化
-        $html['script' . $i++] = '<script type="text/javascript">var exports={};</script>';
+        $html['script' . $i++] = '<script type="text/javascript">var exports={}; var routerView=[];</script>';
         #设置内容
-        $html['script' . $i++] = '</head><body><div id="app">';
-        $html['script' . $i++] = $this->html['body'];
-        $html['script' . $i++] = '</div>';
-        $html_i                = $html;
-        $html_i                = array_remove($html_i, 'jquery');
-        $html_i                = array_remove($html_i, 'babel');
+        $html['script' . $i++] = '</head><body>';
+        if ($config['route']) {
+            $html['script' . $i++] = $this->html['body'];
+        } else {
+            $html['script' . $i++] = '<div id="app">';
+            $html['script' . $i++] = $this->html['body'];
+            $html['script' . $i++] = '</div>';
+        }
+        $html_i = $html;
+        $html_i = array_remove($html_i, 'jquery');
+        $html_i = array_remove($html_i, 'babel');
         #编译模式下存储
         if (!C("view", "prestrain")) {
             cache::set($unique . 'html', implode(" ", $html_i), 80);
@@ -178,7 +184,14 @@ TPL;
             $html['script' . $i++] = "Vue.component('" . $key . "',exports.default);</script>";
             $arr['compontent'][]   = $unique . $key;
         }
-
+        #输出视图内容
+        foreach ($this->html['routeView'] as $key => $value) {
+            $html['script' . $i++] = '<script type="text/babel" id="' . $unique . $key . '">';
+            $html['script' . $i++] = $value['script'];
+            $html['script' . $i++] = "routerView['{$key}'].template=" . '"' . $value['template'] . '";';
+            $html['script' . $i++] = "</script>";
+            $arr['routeView'][]    = $unique . $key;
+        }
         #设置存储名
         $arr['body'] = $unique . 'body';
         $arr['html'] = $unique . 'html';
@@ -187,7 +200,17 @@ TPL;
         $_GET['babel' . md5('babel_this7')] = to_json($arr);
 
         #编译JS代码
-        $html['script' . $i++] = '<script type="text/babel" id="' . $unique . 'body">' . $this->html['script'];
+        $html['script' . $i++] = '<script type="text/babel" id="' . $unique . 'body">';
+
+        #单例模式
+        if ($config['single'] && is_array($config['route']) && !empty($config['route'])) {
+            $html['script' . $i++] = 'var getrouter = $_GET["app"] + "_" + $_GET["model"];';
+            $html['script' . $i++] = 'getrouter = (getrouter=="_undefined")?"home_home":getrouter;';
+            $html['script' . $i++] = 'console.log(getrouter);';
+            $html['script' . $i++] = 'Vue.component("router-view", routerView[getrouter]);';
+        }
+
+        $html['script' . $i++] = $this->html['script'];
         $html['script' . $i++] = ';exports.default.el = "#app";var app = new Vue(exports.default);</script>';
         $html['script' . $i++] = '<script type="text/javascript">';
 
@@ -211,8 +234,8 @@ TPL;
      * 获取主配置JSON
      * @Author   Sean       Yan
      * @DateTime 2018-08-13
-     * @param    [type]     $array 配置数据
-     * @param    [type]     $obj   [description]
+     * @param    array      $array 配置数据
+     * @param    object     $obj   父级对象
      * @param    string     $type  [description]
      * @return   [type]            [description]
      */
@@ -223,13 +246,30 @@ TPL;
         $this->html['css'] = isset($array['style']) ? array_merge($array['style'], $this->html['css']) : $this->html['css'];
         #获取script标签JS列表
         $this->html['js'] = isset($array['script']) ? array_merge($array['script'], $this->html['js']) : $this->html['js'];
+        #判断是否为单例模式
+        if (isset($array['single']) && is_array($array['route'])) {
+            foreach ($array['route'] as $key => $value) {
+                $file = $this->view->getTemplateFile($value['component'], true);
+                if (!file_exists($file)) {
+                    throw new Exception("组件文件不存在:" . $file);
+                }
+                $content = file_get_contents($file);
+                $key     = str_replace("/", "_", $value['path']);
+                $type    = array("name" => "routeView", "value" => $key);
+                $obj->parse($content, $this, $type);
+            }
+        }
         #判断是否有组件
         if (isset($array['components'])) {
             foreach ($array['components'] as $key => $value) {
-                $file    = $this->view->getTemplateFile($value, true);
-                $path    = dirname($file);
+                $file = $this->view->getTemplateFile($value, true);
+                $path = dirname($file);
+                if (!file_exists($file)) {
+                    throw new Exception("组件文件不存在:" . $file);
+                }
                 $content = file_get_contents($file);
-                $obj->parse($content, $this, $key, $path);
+                $type    = array("name" => "compontent", "value" => $key);
+                $obj->parse($content, $this, $type, $path);
             }
         }
     }

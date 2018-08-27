@@ -52,11 +52,18 @@ class vue {
         #当前页面
         $page = $_GET['model'] . "/" . $_GET['action'];
 
-        #判断当前模式
-        if ($this->config['route'] && !in_array($page, $this->config['excludeRoute'])) {
+        #启动独立路由模式 且排除非路由项
+        if ($this->config['route'] && !$this->config['single'] && !in_array($page, $this->config['excludeRoute'])) {
             $this->appTpl['appTpl']                    = ROOT_DIR . DS . "client/app.html";
             $this->config['components']['router-view'] = $this->appTpl['routeTpl'];
-        } else {
+        }
+        #启动单例模式 且路由列表不为空
+        elseif ($this->config['single'] && is_array($this->config['route']) && !empty($this->config['route'])) {
+            $this->appTpl['appTpl']   = ROOT_DIR . DS . "client/app.html";
+            $this->appTpl['routeTpl'] = $this->appTpl['appTpl'];
+        }
+        #启动独立模式
+        else {
             $this->appTpl['appTpl'] = $this->appTpl['routeTpl'];
         }
 
@@ -77,6 +84,7 @@ class vue {
      */
     public function display() {
         extract($this->appTpl);
+
         #判断模版文件-在为空的情况下生产环境返回False
         if (!$appTpl) {
             return false;
@@ -123,13 +131,13 @@ class vue {
 
         $status = DEBUG
         || !file_exists($precompileTpl)
-            || (filemtime($appTpl) > filemtime($precompileTpl))
-            || (filemtime($routeTpl) > filemtime($precompileTpl));
+            || (@filemtime($appTpl) > @filemtime($precompileTpl))
+            || (@filemtime($routeTpl) > @filemtime($precompileTpl));
 
         if (!empty($file)) {
             $status = !file_exists($file)
-                || (filemtime($appTpl) > filemtime($file))
-                || (filemtime($routeTpl) > filemtime($file));
+                || (@filemtime($appTpl) > @filemtime($file))
+                || (@filemtime($routeTpl) > @filemtime($file));
         }
 
         return $status;
@@ -283,6 +291,10 @@ class vue {
         $html = cache::get($babel['html']);
         $html .= '<script type="text/javascript">';
         foreach ($babel['compontent'] as $key => $value) {
+            $script = cache::get($value);
+            $html .= $script;
+        }
+        foreach ($babel['routeView'] as $key => $value) {
             $script = cache::get($value);
             $html .= $script;
         }

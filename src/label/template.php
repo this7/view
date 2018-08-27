@@ -62,13 +62,24 @@ class template extends basics {
         if (!$content) {
             return;
         }
-        if ($this->compontent) {
+        #组件模式
+        if ($this->type && $this->type['name'] == 'compontent') {
             #设置KEY
-            $key = $this->compontent;
+            $key = $this->type['value'];
             #解析组件标签
             $content = $this->tags($content);
             #存储组件
             $this->view->html['compontent'][$key]['template'] = str_replace('"', '\"', compress_html($content));
+        }
+        #视图模式
+        elseif ($this->type && $this->type['name'] == 'routeView') {
+            #设置KEY
+            $key = $this->type['value'];
+            #解析组件标签
+            $content = $this->tags($content);
+            #存储组件
+            $this->view->html['routeView'][$key]['template'] = str_replace('"', '\"', compress_html($content));
+
         } else {
             $this->view->html['body'] = compress_html($content);
         }
@@ -92,11 +103,38 @@ class template extends basics {
         if (!$content) {
             return;
         }
-        #设置KEY
-        $key = $this->compontent;
-        if ($key) {
+        #组件模式
+        if ($this->type && $this->type['name'] == 'compontent') {
+            #设置KEY
+            $key = $this->type['value'];
+            if ($key == "router-view") {
+                $preg = '#data\s*\:\s*\{(.+?)\}#is';
+                if (preg_match($preg, $content, $matches)) {
+                    $data    = 'data:function() {return {' . $matches[1] . '} }';
+                    $content = preg_replace($preg, $data, $content);
+                }
+            }
             $this->view->html['compontent'][$key]['script'] = $content;
-        } else {
+        }
+        #视图模式
+        elseif ($this->type && $this->type['name'] == 'routeView') {
+            #设置KEY
+            $key  = $this->type['value'];
+            $preg = '#export default#is';
+            if (preg_match($preg, $content, $matches)) {
+                $data    = "routerView['{$key}'] = ";
+                $content = preg_replace($preg, $data, $content);
+            }
+            $preg = '#data\s*\:\s*\{(.+?)\}#is';
+            if (preg_match($preg, $content, $matches)) {
+                $data    = 'data:function() {return {' . $matches[1] . '} }';
+                $content = preg_replace($preg, $data, $content);
+            }
+            #返回数据格式
+            $this->view->html['routeView'][$key]['script'] = $content;
+        }
+        #页面模式
+        else {
             $this->view->html['script'] = $content;
         }
     }
@@ -114,13 +152,15 @@ class template extends basics {
         if (!$content) {
             return;
         }
-        if ($this->compontent && !empty($this->path)) {
+        #组件模式
+        if ($this->type && $this->type['name'] == 'compontent' && !empty($this->path)) {
             $file = $this->path . DS . "base.css";
             if (file_exists($file)) {
                 $base    = file_get_contents($file);
                 $content = $base . $content;
             }
         }
+        #CSS编译
         if (isset($attr['lang'])) {
             switch (strtolower($attr['lang'])) {
             case 'less':
