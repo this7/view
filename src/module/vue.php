@@ -53,12 +53,12 @@ class vue {
         $page = $_GET['model'] . "/" . $_GET['action'];
 
         #启动独立路由模式 且排除非路由项
-        if ($this->config['route'] && !$this->config['single'] && !in_array($page, $this->config['excludeRoute'])) {
+        if (isset($this->config['route']) && $this->config['route'] && !$this->config['single'] && !in_array($page, $this->config['excludeRoute'])) {
             $this->appTpl['appTpl']                    = ROOT_DIR . DS . "client/app.html";
             $this->config['components']['router-view'] = $this->appTpl['routeTpl'];
         }
         #启动单例模式 且路由列表不为空
-        elseif ($this->config['single'] && is_array($this->config['route']) && !empty($this->config['route'])) {
+        elseif (isset($this->config['single']) && $this->config['single'] && is_array($this->config['route']) && !empty($this->config['route'])) {
             $this->appTpl['appTpl']   = ROOT_DIR . DS . "client/app.html";
             $this->appTpl['routeTpl'] = $this->appTpl['appTpl'];
         }
@@ -289,16 +289,23 @@ class vue {
         $url = array_remove($data, $key);
         #获取HTML信息
         $html = cache::get($babel['html']);
+        #压缩JS
+        require_once dirname(dirname(__FILE__)) . "/bin/jsmin.php";
+        //$jsmin      = new \JSMin($this->html['script']);
+        //         $script_min = $jsmin->min();
+        // P($script_min);
+        // \JSMin::minify($script);
+
         $html .= '<script type="text/javascript">';
         foreach ($babel['compontent'] as $key => $value) {
             $script = cache::get($value);
-            $html .= $script;
+            $html .= \JSMin::minify($script);
         }
         foreach ($babel['routeView'] as $key => $value) {
             $script = cache::get($value);
-            $html .= $script;
+            $html .= \JSMin::minify($script);
         }
-        $html .= cache::get($babel['body']);
+        $html .= \JSMin::minify(cache::get($babel['body']));
         $html .= '</script></body></html>';
         #设置模板信息
         $tpl     = $this->getTemplateFile('', $url);

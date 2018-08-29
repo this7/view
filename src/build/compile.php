@@ -31,6 +31,7 @@ class compile {
      */
     public $html = array(
         "title"      => "这是This7框架APP应用",
+        "is_title"   => 1,
         "css"        => [],
         "js"         => [],
         "script"     => "",
@@ -127,6 +128,9 @@ TPL;
         #解析组件
         $config = $this->view->config;
         $this->json($config, $obj);
+        #标题设置
+        $this->html['title']    = isset($config['title']) ? $config['title'] : '这是This7框架APP应用';
+        $this->html['is_title'] = isset($config['title']) ? $config['title'] : '这是This7框架APP应用';
         #编译模块
         $obj->parse($this->content, $this);
         $html = [];
@@ -162,7 +166,7 @@ TPL;
         $html['script' . $i++] = '<script type="text/javascript">var exports={}; var routerView=[];</script>';
         #设置内容
         $html['script' . $i++] = '</head><body>';
-        if ($config['route']) {
+        if (isset($config['route']) && $config['route']) {
             $html['script' . $i++] = $this->html['body'];
         } else {
             $html['script' . $i++] = '<div id="app">';
@@ -203,13 +207,13 @@ TPL;
         $html['script' . $i++] = '<script type="text/babel" id="' . $unique . 'body">';
 
         #单例模式
-        if ($config['single'] && is_array($config['route']) && !empty($config['route'])) {
+        if (isset($config['single']) && $config['single'] && is_array($config['route']) && !empty($config['route'])) {
             $html['script' . $i++] = 'var getrouter = $_GET["app"] + "_" + $_GET["model"];';
             $html['script' . $i++] = 'getrouter = (getrouter=="_undefined")?"home_home":getrouter;';
             $html['script' . $i++] = 'console.log(getrouter);';
             $html['script' . $i++] = 'Vue.component("router-view", routerView[getrouter]);';
         }
-
+        #组合JS文件
         $html['script' . $i++] = $this->html['script'];
         $html['script' . $i++] = ';exports.default.el = "#app";var app = new Vue(exports.default);</script>';
         $html['script' . $i++] = '<script type="text/javascript">';
@@ -241,7 +245,7 @@ TPL;
      */
     public function json($array, $obj, $type = 'mian') {
         #判断是否设置标题
-        $this->html['title'] = isset($array['title']) ? $array['title'] : '这是This7框架APP应用';
+        $this->html['title'] = isset($array['title']) ? $array['title'] : $this->html['is_title'];
         #获取link标签CSS列表
         $this->html['css'] = isset($array['style']) ? array_merge($array['style'], $this->html['css']) : $this->html['css'];
         #获取script标签JS列表
