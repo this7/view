@@ -94,6 +94,7 @@ class template extends basics {
      * @param    [type]     $content [description]
      * @param    [type]     &$ubdata [description]
      * @return   [type]              [description]
+     * $c="/\{([^{}]+|(?R))*\}/"; 原始语句
      */
     public function _script($attr, $content, &$ubdata) {
         if (isset($attr['type']) && $attr['type'] == 'text/json') {
@@ -108,9 +109,9 @@ class template extends basics {
             #设置KEY
             $key = $this->type['value'];
             if ($key == "router-view") {
-                $preg = '#data\s*\:\s*\{(.+?)\}#is';
+                $preg = "#data\s*\:\s*\{(([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+)*\}))*\}))*\}))*\}))*\}))*\}))*\}))*\}))*\}))*)\}#";
                 if (preg_match($preg, $content, $matches)) {
-                    $data    = 'data:function() {return {' . $matches[1] . '} }';
+                    $data    = 'data() {return {' . $matches[1] . '}}';
                     $content = preg_replace($preg, $data, $content);
                 }
             }
@@ -125,9 +126,9 @@ class template extends basics {
                 $data    = "routerView['{$key}'] = ";
                 $content = preg_replace($preg, $data, $content);
             }
-            $preg = '#data\s*\:\s*\{(.+?)\}#is';
+            $preg = "#data\s*\:\s*\{(([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+)*\}))*\}))*\}))*\}))*\}))*\}))*\}))*\}))*\}))*)\}#";
             if (preg_match($preg, $content, $matches)) {
-                $data    = 'data:function() {return {' . $matches[1] . '} }';
+                $data    = 'data() {return {' . $matches[1] . '}}';
                 $content = preg_replace($preg, $data, $content);
             }
             #返回数据格式
@@ -155,7 +156,7 @@ class template extends basics {
         #组件模式
         if ($this->type && $this->type['name'] == 'compontent' && !empty($this->path)) {
             $file = $this->path . DS . "base.css";
-            if (file_exists($file)) {
+            if (is_file($file)) {
                 $base    = file_get_contents($file);
                 $content = $base . $content;
             }

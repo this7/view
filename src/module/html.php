@@ -25,6 +25,7 @@ class html {
         require $app;
         $content = ob_get_clean();
         echo $content;
+        debug::display(["model" => "page"]);
         exit;
     }
 }

@@ -10,6 +10,7 @@
  * @link      http://www.ub-7.com
  */
 namespace this7\view\build;
+use \Exception;
 use \this7\view\label\template;
 
 class compile {

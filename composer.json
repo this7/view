@@ -16,8 +16,9 @@
     "require":
     {
         "php": ">=5.6.6",
-        "this7/config": "3.0.*",
-        "this7/cache": "3.0.*"
+        "this7/config": "3.*.*",
+        "this7/debug": "3.*.*",
+        "this7/cache": "3.*.*"
     },
     "autoload":
     {
