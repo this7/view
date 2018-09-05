@@ -38,14 +38,19 @@ class template extends basics {
     private static $widget = [];
 
     /**
+     * 是否设置作用域
+     * @var boolean
+     */
+    private $scoped = false;
+    /**
      * block 块标签
      * level 嵌套层次
      */
     public $tags
     = [
+        'style'    => ['block' => TRUE, 'level' => 5],
         'template' => ['block' => TRUE, 'level' => 5],
         'script'   => ['block' => TRUE, 'level' => 5],
-        'style'    => ['block' => TRUE, 'level' => 5],
         'json'     => ['block' => TRUE, 'level' => 5],
     ];
 
@@ -62,6 +67,10 @@ class template extends basics {
         if (!$content) {
             return;
         }
+        if ($this->scoped) {
+            $content = $this->html_scoped($content);
+        }
+
         #组件模式
         if ($this->type && $this->type['name'] == 'compontent') {
             #设置KEY
@@ -83,7 +92,6 @@ class template extends basics {
         } else {
             $this->view->html['body'] = compress_html($content);
         }
-
     }
 
     /**
@@ -150,8 +158,13 @@ class template extends basics {
      * @return   [type]              [description]
      */
     public function _style($attr, $content, &$ubdata) {
+        $this->scoped = false;
         if (!$content) {
             return;
+        }
+        #判断作用域
+        if (isset($attr['scoped']) && $attr['scoped']) {
+            $this->scoped = substr(md5($content), 0, 6);
         }
         #组件模式
         if ($this->type && $this->type['name'] == 'compontent' && !empty($this->path)) {
@@ -179,6 +192,9 @@ class template extends basics {
                 $content = $this->scss->compile($content);
                 break;
             }
+        }
+        if ($this->scoped) {
+            $content = $this->css_scoped($content);
         }
         $this->view->html['style'][] = compress_css($content);
     }
@@ -212,5 +228,147 @@ class template extends basics {
             $content = $obj->parse($content, $this->view);
             return $content;
         }
+    }
+
+    /**
+     * CSS作用域
+     * @Author   Sean       Yan
+     * @DateTime 2018-09-05
+     * @param    string     $value [description]
+     * @return   [type]            [description]
+     */
+    public function css_scoped($content = '') {
+        $data    = "[data-t-" . $this->scoped . "]";
+        $preg    = "#(\w*)\s*\{#is";
+        $content = preg_replace($preg, '\1' . $data . '{', $content);
+        return $content;
+    }
+
+    /**
+     * HTML作用域
+     * @Author   Sean       Yan
+     * @DateTime 2018-09-05
+     * @param    string     $value [description]
+     * @return   [type]            [description]
+     */
+    public function html_scoped($content = '') {
+        $preg = array(
+            "#\<(a)(.+?)\>#is",
+            "#\<(abbr)(.+?)\>#is",
+            "#\<(acronym)(.+?)\>#is",
+            "#\<(address)(.+?)\>#is",
+            "#\<(applet)(.+?)\>#is",
+            "#\<(area)(.+?)\>#is",
+            "#\<(article)(.+?)\>#is",
+            "#\<(aside)(.+?)\>#is",
+            "#\<(audio)(.+?)\>#is",
+            "#\<(b)(.+?)\>#is",
+            "#\<(base)(.+?)\>#is",
+            "#\<(basefont)(.+?)\>#is",
+            "#\<(bdi)(.+?)\>#is",
+            "#\<(bdo)(.+?)\>#is",
+            "#\<(big)(.+?)\>#is",
+            "#\<(blockquote)(.+?)\>#is",
+            "#\<(br)(.+?)\>#is",
+            "#\<(button)(.+?)\>#is",
+            "#\<(canvas)(.+?)\>#is",
+            "#\<(caption)(.+?)\>#is",
+            "#\<(center)(.+?)\>#is",
+            "#\<(cite)(.+?)\>#is",
+            "#\<(code)(.+?)\>#is",
+            "#\<(col)(.+?)\>#is",
+            "#\<(colgroup)(.+?)\>#is",
+            "#\<(command)(.+?)\>#is",
+            "#\<(datalist)(.+?)\>#is",
+            "#\<(dd)(.+?)\>#is",
+            "#\<(del)(.+?)\>#is",
+            "#\<(details)(.+?)\>#is",
+            "#\<(dfn)(.+?)\>#is",
+            "#\<(dir)(.+?)\>#is",
+            "#\<(div)(.+?)\>#is",
+            "#\<(dl)(.+?)\>#is",
+            "#\<(dt)(.+?)\>#is",
+            "#\<(em)(.+?)\>#is",
+            "#\<(embed)(.+?)\>#is",
+            "#\<(fieldset)(.+?)\>#is",
+            "#\<(figcaption)(.+?)\>#is",
+            "#\<(figure)(.+?)\>#is",
+            "#\<(font)(.+?)\>#is",
+            "#\<(footer)(.+?)\>#is",
+            "#\<(form)(.+?)\>#is",
+            "#\<(frame)(.+?)\>#is",
+            "#\<(frameset)(.+?)\>#is",
+            "#\<(h1)(.+?)\>#is",
+            "#\<(h2)(.+?)\>#is",
+            "#\<(h3)(.+?)\>#is",
+            "#\<(h4)(.+?)\>#is",
+            "#\<(h5)(.+?)\>#is",
+            "#\<(h6)(.+?)\>#is",
+            "#\<(head)(.+?)\>#is",
+            "#\<(header)(.+?)\>#is",
+            "#\<(hgroup)(.+?)\>#is",
+            "#\<(hr)(.+?)\>#is",
+            "#\<(i)(.+?)\>#is",
+            "#\<(iframe)(.+?)\>#is",
+            "#\<(img)(.+?)\>#is",
+            "#\<(input)(.+?)\>#is",
+            "#\<(ins)(.+?)\>#is",
+            "#\<(kbd)(.+?)\>#is",
+            "#\<(label)(.+?)\>#is",
+            "#\<(legend)(.+?)\>#is",
+            "#\<(li)(.+?)\>#is",
+            "#\<(link)(.+?)\>#is",
+            "#\<(map)(.+?)\>#is",
+            "#\<(mark)(.+?)\>#is",
+            "#\<(menu)(.+?)\>#is",
+            "#\<(meta)(.+?)\>#is",
+            "#\<(nav)(.+?)\>#is",
+            "#\<(noframes)(.+?)\>#is",
+            "#\<(noscript)(.+?)\>#is",
+            "#\<(object)(.+?)\>#is",
+            "#\<(ol)(.+?)\>#is",
+            "#\<(optgroup)(.+?)\>#is",
+            "#\<(option)(.+?)\>#is",
+            "#\<(output)(.+?)\>#is",
+            "#\<(p)(.+?)\>#is",
+            "#\<(param)(.+?)\>#is",
+            "#\<(pre)(.+?)\>#is",
+            "#\<(progress)(.+?)\>#is",
+            "#\<(q)(.+?)\>#is",
+            "#\<(rp)(.+?)\>#is",
+            "#\<(rt)(.+?)\>#is",
+            "#\<(ruby)(.+?)\>#is",
+            "#\<(s)(.+?)\>#is",
+            "#\<(samp)(.+?)\>#is",
+            "#\<(section)(.+?)\>#is",
+            "#\<(select)(.+?)\>#is",
+            "#\<(small)(.+?)\>#is",
+            "#\<(source)(.+?)\>#is",
+            "#\<(span)(.+?)\>#is",
+            "#\<(strike)(.+?)\>#is",
+            "#\<(strong)(.+?)\>#is",
+            "#\<(sub)(.+?)\>#is",
+            "#\<(summary)(.+?)\>#is",
+            "#\<(sup)(.+?)\>#is",
+            "#\<(table)(.+?)\>#is",
+            "#\<(tbody)(.+?)\>#is",
+            "#\<(td)(.+?)\>#is",
+            "#\<(textarea)(.+?)\>#is",
+            "#\<(tfoot)(.+?)\>#is",
+            "#\<(th)(.+?)\>#is",
+            "#\<(thead)(.+?)\>#is",
+            "#\<(time)(.+?)\>#is",
+            "#\<(title)(.+?)\>#is",
+            "#\<(tr)(.+?)\>#is",
+            "#\<(track)(.+?)\>#is",
+            "#\<(tt)(.+?)\>#is",
+            "#\<(u)(.+?)\>#is",
+            "#\<(ul)(.+?)\>#is",
+            "#\<(var)(.+?)\>#is",
+            "#\<(video)(.+?)\>#is",
+        );
+        $data    = "data-t-" . $this->scoped;
+        $content = preg_replace($preg, '<\1 ' . $data . '\2>', $content);
+        return $content;
     }
 }
