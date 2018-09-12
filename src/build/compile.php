@@ -145,6 +145,7 @@ TPL;
         foreach ($this->html['css'] as $key => $value) {
             $html['css' . $key] = '<link rel="stylesheet" type="text/css" href="' . replace_url($value, 'file') . '?' . time() . '">';
         }
+        $html['this7'] = '<script src="' . ROOT . "/vendor/this7/view/src/bin/this7.js" . '?' . time() . '"></script>';
         #系统JS-编译模式
         if (!C("view", "prestrain")) {
             $html['babel'] = '<script src="' . ROOT . "/vendor/this7/view/src/bin/babel.js" . '?' . time() . '"></script>';
