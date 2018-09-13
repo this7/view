@@ -37,6 +37,7 @@ class compile {
         "js"         => [],
         "script"     => "",
         "style"      => [],
+        "header"     => [],
         "body"       => "",
         "compontent" => [],
         "routeView"  => []
@@ -137,8 +138,15 @@ TPL;
         $html = [];
         $i    = 0;
         #执行HTML合并
-        $html['html']  = '<!doctype html><html lang="zh"><head><meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes"/> <meta charset="UTF-8"><meta http-equiv="Access-Control-Allow-Origin" content="*"><title>';
-        $html['title'] = $this->html['title'] . '</title>';
+        $html['html'] = '<!doctype html><html lang="zh"><head><meta charset="UTF-8">';
+        #设置公共头部
+        if (!empty($this->html['header']) && is_array($this->html['header'])) {
+            $header = array_unique($this->html['header']);
+            foreach ($header as $key => $value) {
+                $html['header' . $key] = $value;
+            }
+        }
+        $html['title'] = '<title>' . $this->html['title'] . '</title>';
         #前置代码
         $html['precode'] = '<?php echo $precode;?>';
         #输出CSS代码

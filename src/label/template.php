@@ -52,6 +52,7 @@ class template extends basics {
         'template' => ['block' => TRUE, 'level' => 5],
         'script'   => ['block' => TRUE, 'level' => 5],
         'json'     => ['block' => TRUE, 'level' => 5],
+        'header'   => ['block' => TRUE, 'level' => 5],
     ];
 
     /**
@@ -149,6 +150,21 @@ class template extends basics {
     }
 
     /**
+     * 获取头部
+     * @Author   Sean       Yan
+     * @DateTime 2018-09-13
+     * @param    [type]     $attr    [description]
+     * @param    [type]     $content [description]
+     * @param    [type]     &$ubdata [description]
+     * @return   [type]              [description]
+     */
+    public function _header($attr, $content, &$ubdata) {
+        if ($content) {
+            $this->view->html['header'][] = trim($content);
+        }
+    }
+
+    /**
      * 获取样式信息
      * @Author   Sean       Yan
      * @DateTime 2018-06-28
@@ -209,7 +225,8 @@ class template extends basics {
      * @return   [type]              [description]
      */
     public function _json($attr, $content, &$ubdata) {
-        if (!$content) {
+        $content = trim($content);
+        if (!$content || empty($content)) {
             return;
         }
         $array = check_json($content);
