@@ -212,7 +212,7 @@ class template extends basics {
         if (!$content) {
             return;
         }
-        $array = to_array($content);
+        $array = check_json($content);
         $this->view->json($array, $this);
     }
 

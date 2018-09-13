@@ -249,9 +249,9 @@ TPL;
         #判断是否设置标题
         $this->html['title'] = isset($array['title']) ? $array['title'] : $this->html['is_title'];
         #获取link标签CSS列表
-        $this->html['css'] = isset($array['style']) ? array_merge($array['style'], $this->html['css']) : $this->html['css'];
+        $this->html['css'] = isset($array['style']) ? array_merge($this->html['css'], $array['style']) : $this->html['css'];
         #获取script标签JS列表
-        $this->html['js'] = isset($array['script']) ? array_merge($array['script'], $this->html['js']) : $this->html['js'];
+        $this->html['js'] = isset($array['script']) ? array_merge($this->html['js'], $array['script']) : $this->html['js'];
         #判断是否为单例模式
         if (isset($array['single']) && is_array($array['route'])) {
             foreach ($array['route'] as $key => $value) {
