@@ -1,8 +1,8 @@
 /*
  * @Author: qinuoyun
  * @Date:   2018-02-27 14:25:05
- * @Last Modified by:   else
- * @Last Modified time: 2018-09-12 16:40:08
+ * @Last Modified by:   qinuoyun
+ * @Last Modified time: 2018-09-14 14:32:23
  */
 (function() {
 
@@ -557,8 +557,8 @@
  * @return   {[type]}        [description]
  */
 function require(file) {
-    var domain = document.domain;
-    console.log(domain);
+    var domain = window.location.protocol + "//" + document.domain;
+    return domain+"/client"+file;
 }
 
 function $_SURL(e,p) {
