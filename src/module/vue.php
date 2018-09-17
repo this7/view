@@ -118,13 +118,11 @@ class vue {
         if (!empty(self::$vars)) {
             extract(self::$vars);
         }
-
         #获取解析结果
         ob_start();
         require $this->compile;
         $content = ob_get_clean();
         echo $content;
-        debug::display(["model" => "page"]);
         exit;
     }
 
@@ -163,9 +161,9 @@ class vue {
         if ($this->is_update()) {
             $compile = new compile($this);
             $content = $compile->run();
+            #创建编译文件
+            to_mkdir($this->compile, $content, true, true);
         }
-        #创建编译文件
-        to_mkdir($this->compile, $content, true, true);
     }
 
     /**
