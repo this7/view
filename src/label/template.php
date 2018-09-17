@@ -113,6 +113,12 @@ class template extends basics {
         if (!$content) {
             return;
         }
+        #匹配AJAX模式
+        $preg = "#ajax\((.+?)(data\:)(.+?)\)#is";
+        if (preg_match($preg, $content, $matches)) {
+            $data    = 'ajax(\1This7DataAjax:\3)';
+            $content = preg_replace($preg, $data, $content);
+        }
         #组件模式
         if ($this->type && $this->type['name'] == 'compontent') {
             #设置KEY
@@ -120,10 +126,17 @@ class template extends basics {
             if ($key == "router-view") {
                 $preg = "#data\s*\:\s*\{(([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+)*\}))*\}))*\}))*\}))*\}))*\}))*\}))*\}))*\}))*)\}#";
                 if (preg_match($preg, $content, $matches)) {
-                    $data    = 'data() {return {' . $matches[1] . '}}';
+                    $data    = 'data() {return {\1}}';
                     $content = preg_replace($preg, $data, $content);
                 }
             }
+            #还原AJAXDATA数据问题 This7DataAjax
+            $preg = "#ajax\((.+?)(This7DataAjax\:)(.+?)\)#is";
+            if (preg_match($preg, $content, $matches)) {
+                $data    = 'ajax(\1data:\3)';
+                $content = preg_replace($preg, $data, $content);
+            }
+            #数据字段存储
             $this->view->html['compontent'][$key]['script'] = $content;
         }
         #视图模式
@@ -138,6 +151,12 @@ class template extends basics {
             $preg = "#data\s*\:\s*\{(([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+)*\}))*\}))*\}))*\}))*\}))*\}))*\}))*\}))*\}))*)\}#";
             if (preg_match($preg, $content, $matches)) {
                 $data    = 'data() {return {' . $matches[1] . '}}';
+                $content = preg_replace($preg, $data, $content);
+            }
+            #还原AJAXDATA数据问题 This7DataAjax
+            $preg = "#ajax\((.+?)(This7DataAjax\:)(.+?)\)#is";
+            if (preg_match($preg, $content, $matches)) {
+                $data    = 'ajax(\1data:\3)';
                 $content = preg_replace($preg, $data, $content);
             }
             #返回数据格式
