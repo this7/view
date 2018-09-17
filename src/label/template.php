@@ -164,6 +164,13 @@ class template extends basics {
         }
         #页面模式
         else {
+            #还原AJAXDATA数据问题 This7DataAjax
+            $preg = "#ajax\((.+?)(This7DataAjax\:)(.+?)\)#is";
+            if (preg_match($preg, $content, $matches)) {
+                $data    = 'ajax(\1data:\3)';
+                $content = preg_replace($preg, $data, $content);
+            }
+            #返回数据格式
             $this->view->html['script'] = $content;
         }
     }
