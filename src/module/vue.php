@@ -183,20 +183,19 @@ class vue {
             }
             if (is_file($file)) {
                 return $file;
+            } elseif (!is_array($array)) {
+                $file = ROOT_DIR . DS . "client" . DS . $file . C("view", "postfix");
             } else {
-                if (!is_array($array)) {
-                    $file = ROOT_DIR . DS . "client" . DS . $file . C("view", "postfix");
-                }
                 if ($array['app'] == 'client') {
                     $file = ROOT_DIR . DS . "client/pages/" . $array['model'] . "/" . $array['action'] . C("view", "postfix");
                 } else {
                     $file = ROOT_DIR . DS . $array['app'] . "/" . $array['model'] . "/" . $array['action'] . C("view", "postfix");
                 }
             }
+            return $file;
             if (!is_file($file)) {
                 throw new Exception("模板文件不存在", ErrorCode::$FileDoesNotExist);
             }
-            return $file;
         } catch (Exception $e) {
             ERRORCODE($e);
         }
