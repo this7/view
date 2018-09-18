@@ -10,6 +10,8 @@
  * @link      http://www.ub-7.com
  */
 namespace this7\view\module;
+use Exception;
+use this7\framework\ErrorCode;
 use \this7\view\build\compile;
 
 class vue {
@@ -175,25 +177,28 @@ class vue {
      * @return   string            获取文件路径
      */
     public function getTemplateFile($file = NULL, $array = []) {
-        if (empty($array)) {
-            $array = $_GET;
-        }
-        if (is_file($file)) {
-            return $file;
-        } else if (!is_file($file)) {
-            if (!is_array($array)) {
-                return ROOT_DIR . DS . "client" . DS . $file . C("view", "postfix");
+        try {
+            if (empty($array)) {
+                $array = $_GET;
             }
-            if ($array['app'] == 'client') {
-                return ROOT_DIR . DS . "client/pages/" . $array['model'] . "/" . $array['action'] . C("view", "postfix");
+            if (is_file($file)) {
+                return $file;
             } else {
-                return ROOT_DIR . DS . $array['app'] . "/" . $array['model'] . "/" . $array['action'] . C("view", "postfix");
+                if (!is_array($array)) {
+                    $file = ROOT_DIR . DS . "client" . DS . $file . C("view", "postfix");
+                }
+                if ($array['app'] == 'client') {
+                    $file = ROOT_DIR . DS . "client/pages/" . $array['model'] . "/" . $array['action'] . C("view", "postfix");
+                } else {
+                    $file = ROOT_DIR . DS . $array['app'] . "/" . $array['model'] . "/" . $array['action'] . C("view", "postfix");
+                }
             }
-        }
-        if (DEBUG) {
-            throw new Exception("模板不存在:" . $file);
-        } else {
-            return FALSE;
+            if (!is_file($file)) {
+                throw new Exception("模板文件不存在", ErrorCode::$FileDoesNotExist);
+            }
+            return $file;
+        } catch (Exception $e) {
+            ERRORCODE($e);
         }
     }
 
@@ -206,7 +211,6 @@ class vue {
      */
     public function getFileNmae($file = '', $suffix = '') {
         $compilePath = C("view", "cache");
-
         return ROOT_DIR . DS . $compilePath . "/" . md5($this->addressToUrl($file)) . '_' . basename($file, C("view", "postfix")) . $suffix;
     }
 
@@ -330,7 +334,6 @@ class vue {
             to_mkdir($file, $html, true, true);
         }
         redirect($url);
-        exit("这是系统");
     }
 
     public function addressToUrl($url = '') {

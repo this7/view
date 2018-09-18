@@ -173,7 +173,7 @@ TPL;
         #后置代码
         $html['rearcode'] = '<?php echo $rearcode;?>';
         #初始化SESSION
-        $html['script' . $i++] = '<script type="text/javascript">var $_SESSION=' . to_json($_SESSION) . ';</script>';
+        $html['script' . $i++] = '<script type="text/javascript">var $_SESSION=<?php echo to_json($_SESSION);?>;</script>';
         #设置初始化
         $html['script' . $i++] = '<script type="text/javascript">var exports={}; var routerView=[];</script>';
         #设置内容
