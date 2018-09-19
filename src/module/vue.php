@@ -120,6 +120,8 @@ class vue {
         if (!empty(self::$vars)) {
             extract(self::$vars);
         }
+        #清除之前的缓存
+        ob_end_clean();
         #获取解析结果
         ob_start();
         require $this->compile;
