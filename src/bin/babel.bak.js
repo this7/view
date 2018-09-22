@@ -111,8 +111,6 @@
             var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function(obj) { return typeof obj; } : function(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
             exports.transform = transform;
-            exports.demo = demo;
-            exports.getPagePage = getPagePage;
             exports.transformFromAst = transformFromAst;
             exports.registerPlugin = registerPlugin;
             exports.registerPlugins = registerPlugins;
@@ -190,20 +188,6 @@
                     presets: presets,
                     plugins: plugins
                 });
-            }
-
-            var pagepage = 0;
-
-            function demo(code) {
-                //transformCode
-                pagepage = code.page;
-                return _transformScriptTags.transformCode(transform, code);
-            }
-
-
-
-            function getPagePage() {
-                return pagepage;
             }
 
             function transform(code, options) {
@@ -14797,14 +14781,12 @@
             // message.
 
             pp$5.raise = function(pos, message) {
-                var page = Babel.getPagePage();
                 var loc = getLineInfo(this.input, pos);
-                message += "[File:"+page+"] (" + loc.line + ":" + loc.column + ")";
+                message += " (" + loc.line + ":" + loc.column + ")";
                 var err = new SyntaxError(message);
                 err.pos = pos;
                 err.loc = loc;
                 throw err;
-
             };
 
             /* eslint max-len: 0 */
@@ -49524,8 +49506,10 @@
                 Converter.prototype.toComment = function(options) {
                     var base64 = this.toBase64();
                     var data = 'sourceMappingURL=data:application/json;charset=utf-8;base64,' + base64;
+                    //console.log(data);
+                    //return options && options.multiline ? '/*# ' + data + ' */' : '//# ' + data;
+                    //删除备注信息
                     return '';
-                    return options && options.multiline ? '/*# ' + data + ' */' : '//# ' + data;
                 };
 
                 // returns copy instead of original
@@ -49591,6 +49575,8 @@
 
                 exports.generateMapFileComment = function(file, options) {
                     var data = 'sourceMappingURL=' + file;
+                    // console.log(options);
+                    // document.getElementById('output').innerHTML = data;
                     return options && options.multiline ? '/*# ' + data + ' */' : '//# ' + data;
                 };
                 /* WEBPACK VAR INJECTION */
@@ -63321,7 +63307,6 @@
             var _extends = Object.assign || function(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
             exports.runScripts = runScripts;
-            exports.transformCode = transformCode;
             /**
              * Copyright 2013-2015, Facebook, Inc.
              * All rights reserved.
@@ -63334,13 +63319,13 @@
             var scriptTypes = ['text/jsx', 'text/babel'];
 
             var headEl = void 0;
+            var babelEL = '';
             var inlineScriptCount = 0;
 
             /**
              * Actually transform the code.
              */
             function transformCode(transformFn, script) {
-                //console.log("执行转换");
                 var source = void 0;
                 if (script.url != null) {
                     source = script.url;
@@ -63351,7 +63336,6 @@
                         source += ' (' + inlineScriptCount + ')';
                     }
                 }
-
                 return transformFn(script.content, _extends({
                     filename: source
                 }, buildBabelOptions(script))).code;
@@ -63374,13 +63358,87 @@
              * after transforming it.
              */
             function run(transformFn, script) {
-                console.log("使用");
                 var scriptEl = document.createElement('script');
-                console.log(script);
-                console.log(scriptEl);
-                console.log("transformFn:©", transformFn);
                 scriptEl.text = transformCode(transformFn, script);
-                //headEl.appendChild(scriptEl);
+                var datas = { "body": scriptEl.text, "keyword": script.id };
+                if (script.id != null) {
+                    // $.ajax({
+                    //     type: 'POST',
+                    //     url: 'http://' + document.domain + '/system/view/saveES5',
+                    //     data: datas,
+                    //     success: function(e) {
+                    //         //console.log(e);
+                    //     },
+                    //     error: function(e) {
+                    //         //console.log(e);
+                    //     }
+                    // });
+                    var url = document.location.protocol+'//' + document.domain + '/system/view/saveES5';
+
+                    ajax({
+                        type: "POST",
+                        url: url,
+                        dataType: "json",
+                        data: datas,
+                        beforeSend: function() {
+                            //some js code 
+                        },
+                        success: function(msg) {
+                            console.log(msg)
+                        },
+                        error: function() {
+                            console.log("error")
+                        }
+                    })
+
+                }
+                headEl.appendChild(scriptEl);
+            }
+
+            function ajax() {
+                var ajaxData = {
+                    type: arguments[0].type || "GET",
+                    url: arguments[0].url || "",
+                    async: arguments[0].async || "true",
+                    data: arguments[0].data || null,
+                    dataType: arguments[0].dataType || "text",
+                    contentType: arguments[0].contentType || "application/x-www-form-urlencoded",
+                    beforeSend: arguments[0].beforeSend || function() {},
+                    success: arguments[0].success || function() {},
+                    error: arguments[0].error || function() {}
+                }
+                ajaxData.beforeSend()
+                var xhr = createxmlHttpRequest();
+                xhr.responseType = ajaxData.dataType;
+                xhr.open(ajaxData.type, ajaxData.url, ajaxData.async);
+                xhr.setRequestHeader("Content-Type", ajaxData.contentType);
+                xhr.send(convertData(ajaxData.data));
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState == 4) {
+                        if (xhr.status == 200) {
+                            ajaxData.success(xhr.response)
+                        } else {
+                            ajaxData.error()
+                        }
+                    }
+                }
+            }
+
+            function createxmlHttpRequest() {
+                if (window.ActiveXObject) {
+                    return new ActiveXObject("Microsoft.XMLHTTP");
+                } else if (window.XMLHttpRequest) {
+                    return new XMLHttpRequest();
+                }
+            }
+
+            function convertData(data) {
+                var arr = [];
+                for (var name in data) {
+                    arr.push(encodeURIComponent(name) + "=" + encodeURIComponent(data[name]));
+                }
+                arr.push(("v=" + Math.random()).replace(".", ""));
+                return arr.join("&");
             }
 
             /**
@@ -63446,7 +63504,6 @@
 
                         if (script.loaded && !script.executed) {
                             script.executed = true;
-                            console.log("查看", script);
                             run(transformFn, script);
                         } else if (!script.loaded && !script.error && !script.async) {
                             break;
@@ -63460,6 +63517,7 @@
                         async: script.hasAttribute('async'),
                         error: false,
                         executed: false,
+                        id: script.getAttribute("id"),
                         plugins: getPluginsOrPresetsFromScript(script, 'data-plugins'),
                         presets: getPluginsOrPresetsFromScript(script, 'data-presets')
                     };
@@ -63515,10 +63573,9 @@
                 if (jsxScripts.length === 0) {
                     return;
                 }
-
-                console.warn('You are using the in-browser Babel transformer. Be sure to precompile ' + 'your scripts for production - https://babeljs.io/docs/setup/');
-
                 //console.log(jsxScripts);
+                //babelEL = jsxScripts[0].getAttribute("id");
+                //console.warn('You are using the in-browser Babel transformer. Be sure to precompile ' + 'your scripts for production - https://babeljs.io/docs/setup/');
 
                 loadScripts(transformFn, jsxScripts);
             }

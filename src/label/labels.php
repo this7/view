@@ -23,8 +23,12 @@ class labels extends basics {
      */
     public $tags
     = [
-        'img' => ['block' => FALSE],
-        'a'   => ['block' => FALSE],
+        'loop'   => ['block' => TRUE, 'level' => 5],
+        'if'     => ['block' => TRUE, 'level' => 5],
+        'elseif' => ['block' => FALSE],
+        'else'   => ['block' => FALSE],
+        'img'    => ['block' => FALSE],
+        'a'      => ['block' => FALSE],
     ];
 
     //img标签地址转换
@@ -43,5 +47,37 @@ class labels extends basics {
             $attr['href'] = replace_url($attr['href'], 'link');
         }
         return $this->recover('a', $attr, 'block');
+    }
+
+    //if标签
+    public function _if($attr, $content, &$ubdata) {
+        $php = "<?php if({$attr['value']}){?>$content<?php }?>";
+        return $php;
+    }
+
+    //elseif标签
+    public function _elseif($attr, $content, &$view) {
+        return "<?php }else if({$attr['value']}){?>";
+    }
+
+    //else标签
+    public function _else($attr, $content, &$view) {
+        return "<?php }else{?>";
+    }
+
+    //标签处理
+    public function _loop($attr, $content) {
+        $empty = isset($attr['empty']) ? $attr['empty'] : "' '";
+        $php   = "<?php if(empty({$attr['name']})){";
+        $php .= "echo {$empty};";
+        $php .= "}else{?>";
+        if (isset($attr['key'])) {
+            $php .= "<?php foreach ((array){$attr['name']} as {$attr['key']}=>{$attr['id']}){?>";
+        } else {
+            $php .= "<?php foreach ((array){$attr['name']} as {$attr['id']}){?>";
+        }
+        $php .= $content;
+        $php .= '<?php }}?>';
+        return $php;
     }
 }

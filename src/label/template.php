@@ -42,17 +42,18 @@ class template extends basics {
      * @var boolean
      */
     private $scoped = false;
+
     /**
      * block 块标签
      * level 嵌套层次
      */
     public $tags
     = [
-        'style'    => ['block' => TRUE, 'level' => 5],
-        'template' => ['block' => TRUE, 'level' => 5],
-        'script'   => ['block' => TRUE, 'level' => 5],
-        'json'     => ['block' => TRUE, 'level' => 5],
-        'header'   => ['block' => TRUE, 'level' => 5],
+        'style'    => ['block' => TRUE, 'level' => 1],
+        'template' => ['block' => TRUE, 'level' => 1],
+        'script'   => ['block' => TRUE, 'level' => 1],
+        'json'     => ['block' => TRUE, 'level' => 1],
+        'header'   => ['block' => TRUE, 'level' => 1],
     ];
 
     /**
@@ -65,34 +66,21 @@ class template extends basics {
      * @return   [type]              [description]
      */
     public function _template($attr, $content, &$ubdata) {
+        #如果内容为空 直接返回
         if (!$content) {
             return;
         }
+        #设置作用域
         if ($this->scoped) {
             $content = $this->html_scoped($content);
         }
-
-        #组件模式
-        if ($this->type && $this->type['name'] == 'compontent') {
-            #设置KEY
-            $key = $this->type['value'];
-            #解析组件标签
-            $content = $this->tags($content);
-            #存储组件
-            $this->view->html['compontent'][$key]['template'] = str_replace('"', '\"', compress_html($content));
-        }
-        #视图模式
-        elseif ($this->type && $this->type['name'] == 'routeView') {
-            #设置KEY
-            $key = $this->type['value'];
-            #解析组件标签
-            $content = $this->tags($content);
-            #存储组件
-            $this->view->html['routeView'][$key]['template'] = str_replace('"', '\"', compress_html($content));
-
-        } else {
-            $this->view->html['body'] = compress_html($content);
-        }
+        #设置唯一码
+        $unique = $this->info['unique'];
+        #解析组件标签
+        $content = $this->tags($content);
+        #存储组件
+        $this->view->html['compontent'][$unique]['name']     = $this->info['name'];
+        $this->view->html['compontent'][$unique]['template'] = str_replace('"', '\"', compress_html($content));
     }
 
     /**
@@ -110,84 +98,57 @@ class template extends basics {
             $this->_json($attr, $content, $ubdata);
             return;
         }
+        #如果内容为空 直接返回
         if (!$content) {
             return;
         }
-        #匹配AJAX模式
+        #匹配export default模式
+        $preg = "#export default#is";
+        if (preg_match($preg, $content, $matches)) {
+            $data    = 'exports.default =';
+            $content = preg_replace($preg, $data, $content);
+        }
+        #匹配AJAX模式--防止AJAX中的DATA被匹配掉
         $preg = "#ajax\((.+?)(data\:)(.+?)\)#is";
         if (preg_match($preg, $content, $matches)) {
             $data    = 'ajax(\1This7DataAjax:\3)';
             $content = preg_replace($preg, $data, $content);
         }
-        #组件模式
-        if ($this->type && $this->type['name'] == 'compontent') {
-            #设置KEY
-            $key = $this->type['value'];
-            if ($key == "router-view") {
-                $preg = "#data\s*\:\s*\{(([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+)*\}))*\}))*\}))*\}))*\}))*\}))*\}))*\}))*\}))*)\}#";
-                if (preg_match($preg, $content, $matches)) {
-                    $data    = 'data() {return {\1}}';
-                    $content = preg_replace($preg, $data, $content);
-                }
-            }
-            #还原AJAXDATA数据问题 This7DataAjax
-            $preg = "#ajax\((.+?)(This7DataAjax\:)(.+?)\)#is";
-            if (preg_match($preg, $content, $matches)) {
-                $data    = 'ajax(\1data:\3)';
-                $content = preg_replace($preg, $data, $content);
-            }
-            #数据字段存储
-            $this->view->html['compontent'][$key]['script'] = $content;
+        #设置唯一码
+        $unique = $this->info['unique'];
+        #设置替换DATA模式
+        $preg = "#data\s*\:\s*\{(([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+)*\}))*\}))*\}))*\}))*\}))*\}))*\}))*\}))*\}))*)\}#";
+        if (preg_match($preg, $content, $matches)) {
+            $data    = 'data() {return {\1}}';
+            $content = preg_replace($preg, $data, $content);
         }
-        #视图模式
-        elseif ($this->type && $this->type['name'] == 'routeView') {
-            #设置KEY
-            $key  = $this->type['value'];
-            $preg = '#export default#is';
-            if (preg_match($preg, $content, $matches)) {
-                $data    = "routerView['{$key}'] = ";
-                $content = preg_replace($preg, $data, $content);
-            }
-            $preg = "#data\s*\:\s*\{(([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+|(\{([^{}]+)*\}))*\}))*\}))*\}))*\}))*\}))*\}))*\}))*\}))*)\}#";
-            if (preg_match($preg, $content, $matches)) {
-                $data    = 'data() {return {' . $matches[1] . '}}';
-                $content = preg_replace($preg, $data, $content);
-            }
-            #还原AJAXDATA数据问题 This7DataAjax
-            $preg = "#ajax\((.+?)(This7DataAjax\:)(.+?)\)#is";
-            if (preg_match($preg, $content, $matches)) {
-                $data    = 'ajax(\1data:\3)';
-                $content = preg_replace($preg, $data, $content);
-            }
-            #返回数据格式
-            $this->view->html['routeView'][$key]['script'] = $content;
+        #还原AJAXDATA数据问题 This7DataAjax
+        $preg = "#ajax\((.+?)(This7DataAjax\:)(.+?)\)#is";
+        if (preg_match($preg, $content, $matches)) {
+            $data    = 'ajax(\1data:\3)';
+            $content = preg_replace($preg, $data, $content);
         }
-        #页面模式
-        else {
-            #还原AJAXDATA数据问题 This7DataAjax
-            $preg = "#ajax\((.+?)(This7DataAjax\:)(.+?)\)#is";
-            if (preg_match($preg, $content, $matches)) {
-                $data    = 'ajax(\1data:\3)';
-                $content = preg_replace($preg, $data, $content);
-            }
-            #返回数据格式
-            $this->view->html['script'] = $content;
-        }
+
+        #数据字段存储
+        $this->view->html['compontent'][$unique]['page']   = str_replace(ROOT_DIR, "", $this->info['page']);
+        $this->view->html['compontent'][$unique]['line']   = $this->info['line'];
+        $this->view->html['compontent'][$unique]['script'] = $content;
     }
 
-    /**
-     * 获取头部
-     * @Author   Sean       Yan
-     * @DateTime 2018-09-13
-     * @param    [type]     $attr    [description]
-     * @param    [type]     $content [description]
-     * @param    [type]     &$ubdata [description]
-     * @return   [type]              [description]
-     */
-    public function _header($attr, $content, &$ubdata) {
-        if ($content) {
-            $this->view->html['header'][] = trim($content);
+    public function getRowsread() {
+
+        $array = explode(PHP_EOL, $this->content);
+
+        foreach ($array as $key => $value) {
+            $preg = "#\<script(.+?)\>#is";
+            if (preg_match($preg, $value, $matches)) {
+                $s = trim($matches[1]);
+                if (md5($s) !== md5('type="text/json"') && $s !== md5("type='text/json'")) {
+                    $line = $key;
+                }
+            }
         }
+        $this->info['line'] = $line;
     }
 
     /**
@@ -200,7 +161,9 @@ class template extends basics {
      * @return   [type]              [description]
      */
     public function _style($attr, $content, &$ubdata) {
+        $this->getRowsread();
         $this->scoped = false;
+        #如果内容为空 直接返回
         if (!$content) {
             return;
         }
@@ -209,8 +172,8 @@ class template extends basics {
             $this->scoped = substr(md5($content), 0, 6);
         }
         #组件模式
-        if ($this->type && $this->type['name'] == 'compontent' && !empty($this->path)) {
-            $file = $this->path . DS . "base.css";
+        if ($this->info && in_array($this->info['name'], ['app', 'router-view']) && !empty($this->info['path'])) {
+            $file = $this->info['path'] . DS . "base.css";
             if (is_file($file)) {
                 $base    = file_get_contents($file);
                 $content = $base . $content;
@@ -256,7 +219,22 @@ class template extends basics {
             return;
         }
         $array = check_json($content);
-        $this->view->json($array, $this);
+        $this->view->module($this->info['page'], $array);
+    }
+
+    /**
+     * 获取头部
+     * @Author   Sean       Yan
+     * @DateTime 2018-09-13
+     * @param    [type]     $attr    [description]
+     * @param    [type]     $content [description]
+     * @param    [type]     &$ubdata [description]
+     * @return   [type]              [description]
+     */
+    public function _header($attr, $content, &$ubdata) {
+        if ($content) {
+            $this->view->html['header'][] = trim($content);
+        }
     }
 
     /**

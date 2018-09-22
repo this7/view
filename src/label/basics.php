@@ -18,7 +18,8 @@ abstract class basics {
     protected $path;
     protected $left;
     protected $right;
-    protected $type;
+    protected $info;
+    protected $name;
     protected $exp = [
         '/\s+eq\s+/'  => '==',
         '/\s+neq\s+/' => '!=',
@@ -33,15 +34,14 @@ abstract class basics {
      *
      * @param  string   $content        模板内容
      * @param  object   &$view          视图对象
-     * @param  object   $compontent     是否为组件
+     * @param  object   $info           模版信息
      * @param  string   $path           所在目录
      * @return string                   解析后内容
      */
-    public function parse($content, &$view, $type = false, $path = "") {
+    public function parse($content, &$view, $info = []) {
         $this->content = $content;
         $this->view    = $view;
-        $this->path    = $path;
-        $this->type    = $type;
+        $this->info    = $info;
         $this->left    = "<";
         $this->right   = ">";
 
