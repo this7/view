@@ -124,7 +124,11 @@ abstract class basics {
         $html = '<' . trim($tag);
         #循环遍历属性
         foreach ($attr as $key => $value) {
-            $html .= ' ' . $key . '="' . $value . '"';
+            if ($key === $value) {
+                $html .= ' ' . $key;
+            } else {
+                $html .= ' ' . $key . '="' . $value . '"';
+            }
         }
         switch ($type) {
         case 'line':
@@ -152,6 +156,12 @@ abstract class basics {
         if (preg_match_all($preg, $con, $matches)) {
             foreach ($matches[1] as $i => $name) {
                 $attr[$name] = preg_replace(array_keys($this->exp), array_values($this->exp), $matches[3][$i]);
+            }
+        }
+        $preg = '#(data\-[\w\-]*)\s*#i';
+        if (preg_match_all($preg, $con, $matches)) {
+            foreach ($matches[1] as $i => $name) {
+                $attr[$name] = $name;
             }
         }
         return $attr;

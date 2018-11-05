@@ -4,8 +4,8 @@
  * This7 Frame
  * @Author: else
  * @Date:   2018-06-28 14:07:29
- * @Last Modified by:   else
- * @Last Modified time: 2018-08-27 10:16:34
+ * @Last Modified by:   seanyan
+ * @Last Modified time: 2018-11-05 16:28:58
  */
 namespace this7\view;
 
@@ -25,6 +25,33 @@ class view {
 
     public function __construct($app) {
         $this->app = $app;
+    }
+
+    /**
+     * 视图URL解析
+     * @param  string $value [description]
+     * @return [type]        [description]
+     */
+    public function viewURL($url = '') {
+        $string = trim($_SERVER['REQUEST_URI'], "/");
+        if (substr($string, 0, strlen("view")) === "view") {
+            $_GET['type'] = "view";
+            #清除之前的缓存
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            if (empty($_POST['data'])) {
+                $returned = request::get($_POST['url']);
+            } else {
+                $returned = request::post($_POST['url'], $_POST['data']);
+            }
+            if ($returned['status'] == 200) {
+                $returned = $returned['body'];
+            }
+            echo to_json($returned);
+            exit();
+        }
+        return $url;
     }
 
     /**

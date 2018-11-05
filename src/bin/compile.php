@@ -12,7 +12,13 @@ $i = 0;
 foreach ($compontent as $key => $var): ?>
 <script type="text/this7js" id="js_<?php echo $i; ?>" page="<?php echo $var['page']; ?>" name="<?php echo $var['name']; ?>" line="<?php echo $var['line']; ?>">
 <?php echo str_repeat(PHP_EOL, $var['line']); ?>
-<?php echo $var['script']; ?>
+<?php if (isset($var['script'])): ?>
+    <?php echo $var['script']; ?>
+<?php else: ?>
+    export default {
+        "name":'<?php echo $var['name']; ?>'
+    }
+<?php endif;?>
 </script>
 <script type="text/this7tpl" id="tpl_<?php echo $i; ?>" page="<?php echo $var['page']; ?>" name="<?php echo $var['name']; ?>" line="<?php echo $var['line']; ?>">
 <?php echo $var['template']; ?>
@@ -21,7 +27,32 @@ foreach ($compontent as $key => $var): ?>
 $i++;
 endforeach;?>
 
+<?php if (isset($extend)): ?>
+<?php
+$i = 0;
+foreach ($extend as $key => $var): ?>
+<script type="text/this7js" id="extendjs_<?php echo $i; ?>" page="<?php echo $var['page']; ?>" name="<?php echo $var['name']; ?>" line="<?php echo $var['line']; ?>">
+<?php echo str_repeat(PHP_EOL, $var['line']); ?>
+<?php if (isset($var['script'])): ?>
+    <?php echo $var['script']; ?>
+<?php else: ?>
+    export default {
+        "name":'<?php echo $var['name']; ?>'
+    }
+<?php endif;?>
+</script>
+<script type="text/this7tpl" id="extendtpl_<?php echo $i; ?>" page="<?php echo $var['page']; ?>" name="<?php echo $var['name']; ?>" line="<?php echo $var['line']; ?>">
+<?php echo $var['template']; ?>
+</script>
+<?php
+$i++;
+endforeach;?>
+<?php endif;?>
+
 <script type="text/this7css" id="this7_style">
+    <?php foreach ($baseCss as $key => $value): ?>
+    <?php echo $value; ?>
+    <?php endforeach;?>
     <?php foreach ($style as $key => $value): ?>
     <?php echo $value; ?>
     <?php endforeach;?>
@@ -141,7 +172,8 @@ function iGetInnerText(testStr) {
 <script type="text/javascript">
     var js = <?php echo to_json($js); ?>;
     var css = <?php echo to_json($css); ?>;
-    var tongji = <?php echo count($compontent); ?>;
+    var compontents = <?php echo count($compontent); ?>;
+    var extens = <?php echo count($extend); ?>;
     var pagename = '<?php echo $page; ?>';
 
 
@@ -150,7 +182,30 @@ function iGetInnerText(testStr) {
         value: true
     });
     var scriptCode = "";
-    for (var i = 0; i < tongji; i++) {
+
+    for (var i = 0; i < extens; i++) {
+        var code = $("#extendjs_"+i).text();
+        var line = $("#extendjs_"+i).attr("line");
+        var page = $("#extendjs_"+i).attr("page");
+        var name = $("#extendjs_"+i).attr("name");
+        var tpl = $("#extendtpl_"+i).text();
+        var script = {
+            async: false,
+            content: code,
+            line:line,
+            page:page,
+            error: true,
+            executed: true,
+            loaded: true,
+            plugins: null,
+            presets: null,
+            url: null
+        };
+        var result3 = Babel.demo(script);
+        var result2 = result3+'exports.default.template="'+ iGetInnerText(tpl)+'";var '+name+' = Vue.extend(exports.default);';
+        scriptCode += result2;
+    }
+    for (var i = 0; i < compontents; i++) {
         var code = $("#js_"+i).text();
         var line = $("#js_"+i).attr("line");
         var page = $("#js_"+i).attr("page");
@@ -177,6 +232,7 @@ function iGetInnerText(testStr) {
         var result2 = result3+'exports.default.template="'+ iGetInnerText(tpl)+'";Vue.component("'+name+'",exports.default);';
         scriptCode += result2;
     }
+
 
     var style = $("#this7_style").text();
 
@@ -208,7 +264,7 @@ function iGetInnerText(testStr) {
             code:result
         },
         success: function(e){
-           location.reload();
+           //location.reload();
         }
      });
 

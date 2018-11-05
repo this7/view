@@ -38,6 +38,7 @@ class compile {
             ROOT . "/vendor/this7/view/src/bin/babel.js",
         ],
         "script"     => "",
+        "baseCss"    => [],
         "style"      => [],
         "header"     => [],
         "body"       => "",
@@ -99,6 +100,11 @@ class compile {
         #获取script标签JS列表
         $this->html['js'] = isset($config['script']) ? array_merge($this->html['js'], $config['script']) : $this->html['js'];
 
+        #去重复化
+        $this->html['css'] = array_unique($this->html['css']);
+        $this->html['js']  = array_unique($this->html['js']);
+
+        #解析组件模块
         foreach ($config['components'] as $key => $value) {
             #页面唯一编号
             $unique = md5($key);
@@ -109,7 +115,37 @@ class compile {
             #获取文件内容
             $content = file_get_contents($file);
             #设置页面类型
-            $info = array("name" => $key, "unique" => $unique, "page" => $file, "patn" => $path);
+            $info = array(
+                "name"   => $key,
+                "unique" => $unique,
+                "page"   => $file,
+                "path"   => $path,
+                "type"   => "component",
+            );
+            #执行模块编译
+            $obj->parse($content, $this, $info);
+        }
+        if (isset($config['extends']) == false) {
+            return;
+        }
+        #解析扩展模块
+        foreach ($config['extends'] as $key => $value) {
+            #页面唯一编号
+            $unique = md5($key);
+            #获取页面文件
+            $file = $this->vue->getTemplateFile($value, true);
+            #获取所在目录
+            $path = dirname($file);
+            #获取文件内容
+            $content = file_get_contents($file);
+            #设置页面类型
+            $info = array(
+                "name"   => $key,
+                "unique" => $unique,
+                "page"   => $file,
+                "path"   => $path,
+                "type"   => "extend",
+            );
             #执行模块编译
             $obj->parse($content, $this, $info);
         }

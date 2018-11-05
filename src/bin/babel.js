@@ -112,6 +112,7 @@
 
             exports.transform = transform;
             exports.demo = demo;
+            exports.setPagePage = setPagePage;
             exports.getPagePage = getPagePage;
             exports.transformFromAst = transformFromAst;
             exports.registerPlugin = registerPlugin;
@@ -195,12 +196,13 @@
             var pagepage = 0;
 
             function demo(code) {
-                //transformCode
                 pagepage = code.page;
                 return _transformScriptTags.transformCode(transform, code);
             }
 
-
+            function setPagePage(page) {
+                pagepage = page;
+            }
 
             function getPagePage() {
                 return pagepage;
@@ -382,6 +384,7 @@
              * Disables automatic transformation of <script> tags with "text/babel" type.
              */
             function disableScriptTags() {
+
                 window.removeEventListener('DOMContentLoaded', transformScriptTags);
             }
 
@@ -63345,7 +63348,8 @@
                 if (script.url != null) {
                     source = script.url;
                 } else {
-                    source = 'Inline Babel script';
+                    //source = 'Inline Babel script';
+                    source = script.page;
                     inlineScriptCount++;
                     if (inlineScriptCount > 1) {
                         source += ' (' + inlineScriptCount + ')';
@@ -63374,13 +63378,9 @@
              * after transforming it.
              */
             function run(transformFn, script) {
-                console.log("使用");
                 var scriptEl = document.createElement('script');
-                console.log(script);
-                console.log(scriptEl);
-                console.log("transformFn:©", transformFn);
                 scriptEl.text = transformCode(transformFn, script);
-                //headEl.appendChild(scriptEl);
+                headEl.appendChild(scriptEl);
             }
 
             /**
@@ -63446,7 +63446,6 @@
 
                         if (script.loaded && !script.executed) {
                             script.executed = true;
-                            console.log("查看", script);
                             run(transformFn, script);
                         } else if (!script.loaded && !script.error && !script.async) {
                             break;
@@ -63460,6 +63459,7 @@
                         async: script.hasAttribute('async'),
                         error: false,
                         executed: false,
+                        page: script.getAttribute("page"),
                         plugins: getPluginsOrPresetsFromScript(script, 'data-plugins'),
                         presets: getPluginsOrPresetsFromScript(script, 'data-presets')
                     };
@@ -63508,6 +63508,10 @@
                     // Support the old type="text/jsx;harmony=true"
                     var type = script.type.split(';')[0];
                     if (scriptTypes.indexOf(type) !== -1) {
+                        var page = script.getAttribute("page");
+                        Babel.setPagePage(page);
+                        script.page = page;
+                        
                         jsxScripts.push(script);
                     }
                 }
@@ -63516,10 +63520,9 @@
                     return;
                 }
 
-                console.warn('You are using the in-browser Babel transformer. Be sure to precompile ' + 'your scripts for production - https://babeljs.io/docs/setup/');
+                //console.warn('You are using the in-browser Babel transformer. Be sure to precompile ' + 'your scripts for production - https://babeljs.io/docs/setup/');
 
                 //console.log(jsxScripts);
-
                 loadScripts(transformFn, jsxScripts);
             }
 

@@ -25,7 +25,8 @@
 </body>
 <script type="text/javascript">
     var $_SESSION=<?php echo to_json($_SESSION); ?>;
-    var app = {}
+    var app = {};
+    var bus = new Vue();
     var exports={};
     var routerView=[];
     Object.defineProperty(exports, "__esModule", {

@@ -43,6 +43,7 @@ class labels extends basics {
 
     //a标签地址转换
     public function _a($attr, $content, &$ubdata) {
+
         if (isset($attr['href']) && !empty($attr['href'])) {
             $attr['href'] = replace_url($attr['href'], 'link');
         }

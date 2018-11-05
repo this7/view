@@ -117,7 +117,9 @@ class vue {
             extract(self::$vars);
         }
         #清除之前的缓存
-        ob_end_clean();
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
         #获取解析结果
         ob_start();
         require $this->compile;
@@ -173,7 +175,9 @@ class vue {
         $data = to_array($data);
         extract($data);
         #清除之前的缓存
-        ob_end_clean();
+        if (ob_get_level()) {
+            ob_end_clean();
+        }
         #获取解析结果
         ob_start();
         require_once dirname(dirname(__FILE__)) . "/bin/template.php";
@@ -292,6 +296,11 @@ class vue {
         return $html;
     }
 
+    /**
+     * 地址转URL
+     * @param  string $url [description]
+     * @return [type]      [description]
+     */
     public function addressToUrl($url = '') {
         $path   = ROOT_DIR . DS . "client/pages";
         $length = strlen($path);

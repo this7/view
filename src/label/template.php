@@ -78,9 +78,25 @@ class template extends basics {
         $unique = $this->info['unique'];
         #解析组件标签
         $content = $this->tags($content);
-        #存储组件
-        $this->view->html['compontent'][$unique]['name']     = $this->info['name'];
-        $this->view->html['compontent'][$unique]['template'] = str_replace('"', '\"', compress_html($content));
+        #解析存储内容
+        switch ($this->info['type']) {
+        case 'component':
+            #存储组件
+            $this->view->html['compontent'][$unique]['name']     = $this->info['name'];
+            $this->view->html['compontent'][$unique]['page']     = str_replace(ROOT_DIR, "", $this->info['page']);
+            $this->view->html['compontent'][$unique]['line']     = isset($this->info['line']) ? $this->info['line'] : 1;
+            $this->view->html['compontent'][$unique]['template'] = str_replace('"', '\"', compress_html($content));
+            break;
+
+        case 'extend':
+            #存储插件
+            $this->view->html['extend'][$unique]['name']     = $this->info['name'];
+            $this->view->html['extend'][$unique]['page']     = str_replace(ROOT_DIR, "", $this->info['page']);
+            $this->view->html['extend'][$unique]['line']     = isset($this->info['line']) ? $this->info['line'] : 1;
+            $this->view->html['extend'][$unique]['template'] = str_replace('"', '\"', compress_html($content));
+            break;
+        }
+
     }
 
     /**
@@ -130,15 +146,27 @@ class template extends basics {
         }
 
         #数据字段存储
-        $this->view->html['compontent'][$unique]['page']   = str_replace(ROOT_DIR, "", $this->info['page']);
-        $this->view->html['compontent'][$unique]['line']   = $this->info['line'];
-        $this->view->html['compontent'][$unique]['script'] = $content;
+        switch ($this->info['type']) {
+        case 'component':
+            #存储组件
+            $this->view->html['compontent'][$unique]['script'] = $content;
+            break;
+        case 'extend':
+            #存储插件
+            $this->view->html['extend'][$unique]['script'] = $content;
+            break;
+        }
+
     }
 
+    /**
+     * 返回代码所在行
+     * @return [type] [description]
+     */
     public function getRowsread() {
 
         $array = explode(PHP_EOL, $this->content);
-
+        $line  = 1;
         foreach ($array as $key => $value) {
             $preg = "#\<script(.+?)\>#is";
             if (preg_match($preg, $value, $matches)) {
@@ -148,6 +176,8 @@ class template extends basics {
                 }
             }
         }
+        // P([$this->info['name'], $line]);
+
         $this->info['line'] = $line;
     }
 
@@ -171,13 +201,25 @@ class template extends basics {
         if (isset($attr['scoped']) && $attr['scoped']) {
             $this->scoped = substr(md5($content), 0, 6);
         }
+        #基础样式
+        $baseCss = "";
+        $baseKey = 0;
         #组件模式
-        if ($this->info && in_array($this->info['name'], ['app', 'router-view']) && !empty($this->info['path'])) {
+        if ($this->info && !in_array($this->info['name'], ['app', 'router-view']) && !empty($this->info['path'])) {
             $file = $this->info['path'] . DS . "base.css";
             if (is_file($file)) {
-                $base    = file_get_contents($file);
-                $content = $base . $content;
+                $baseCss = file_get_contents($file);
+                $content = $baseCss . $content;
             }
+            #如果是嵌套两级的组件目录则获取上一级的
+            else {
+                $file = dirname($this->info['path']) . DS . "base.css";
+                if (is_file($file)) {
+                    $baseCss = file_get_contents($file);
+                    $content = $baseCss . $content;
+                }
+            }
+            $baseKey = basename($file);
         }
         #CSS编译
         if (isset($attr['lang'])) {
@@ -187,14 +229,43 @@ class template extends basics {
                 if (!$this->less) {
                     $this->less = new \lessc();
                 }
-                $content = $this->less->compile($content);
+                #判断是否有基础样式
+                if (empty($baseCss)) {
+                    $content = $this->less->compile($content);
+                } else {
+                    #存储基础样式
+                    if (empty($this->view->html['baseCss'][$baseKey])) {
+                        $baseCss                               = $this->less->compile($baseCss);
+                        $this->view->html['baseCss'][$baseKey] = $baseCss;
+                    } else {
+                        $baseCss = $this->view->html['baseCss'][$baseKey];
+                    }
+                    #删除多余部分
+                    $content = $this->less->compile($content);
+                    $content = str_replace($baseCss, "", $content);
+                }
                 break;
+            case 'sass':
             case 'scss':
                 require_once dirname(dirname(__FILE__)) . "/bin/scss.inc.php";
                 if (!$this->scss) {
                     $this->scss = new \scssc();
                 }
-                $content = $this->scss->compile($content);
+                #判断是否有基础样式
+                if (empty($baseCss)) {
+                    $content = $this->scss->compile($content);
+                } else {
+                    #存储基础样式
+                    if (empty($this->view->html['baseCss'][$baseKey])) {
+                        $baseCss                               = $this->scss->compile($baseCss);
+                        $this->view->html['baseCss'][$baseKey] = $baseCss;
+                    } else {
+                        $baseCss = $this->view->html['baseCss'][$baseKey];
+                    }
+                    #删除多余部分
+                    $content = $this->scss->compile($content);
+                    $content = str_replace($baseCss, "", $content);
+                }
                 break;
             }
         }
@@ -329,11 +400,11 @@ class template extends basics {
             "#\<(header)(.+?)\>#is",
             "#\<(hgroup)(.+?)\>#is",
             "#\<(hr)(.+?)\>#is",
-            "#\<(i)(.+?)\>#is",
             "#\<(iframe)(.+?)\>#is",
             "#\<(img)(.+?)\>#is",
             "#\<(input)(.+?)\>#is",
             "#\<(ins)(.+?)\>#is",
+            "#\<(i)(.+?)\>#is",
             "#\<(kbd)(.+?)\>#is",
             "#\<(label)(.+?)\>#is",
             "#\<(legend)(.+?)\>#is",
@@ -383,7 +454,6 @@ class template extends basics {
             "#\<(tr)(.+?)\>#is",
             "#\<(track)(.+?)\>#is",
             "#\<(tt)(.+?)\>#is",
-            "#\<(u)(.+?)\>#is",
             "#\<(ul)(.+?)\>#is",
             "#\<(var)(.+?)\>#is",
             "#\<(video)(.+?)\>#is",
